@@ -1,0 +1,169 @@
+* {
+  box-sizing: border-box;
+}
+
+.bg-gray {
+  background-color: #f5f7f9;
+}
+
+.container {
+  width: 1500px;
+  margin: 0 auto;
+}
+
+.item-field {
+  display: flex;
+  border-bottom: thin solid #eee;;
+  background-color: #fff;
+
+  .item-input {
+    padding-left: 20px;
+    display: inline-block;
+    font-size: 18px;
+    line-height: 18px;
+    width: 100%;
+    outline: none;
+    border: none;
+
+    &:hover {
+      background-color: #f4f4f4;
+    }
+  }
+
+}
+
+.control-delete {
+  min-width: 46px;
+  padding: 5px;
+  display: flex;
+  justify-content: space-evenly;
+  border-right: thin solid #eee;;
+
+  &:hover {
+    .count-number {
+      display: none;
+    }
+
+    .link-pop {
+      display: block;
+    }
+  }
+
+  .link-pop {
+    display: none;
+  }
+
+  .menu-delete {
+    position: relative;
+
+    &.show {
+      .menu-delete-detail, .bg-cover {
+        display: block;
+      }
+    }
+
+    i {
+      &:hover {
+        color: red;
+      }
+
+      padding: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #888888;
+    }
+
+    .menu-delete-detail {
+      border-radius: 5px;
+      overflow: auto;
+      box-shadow: 0 2px 4px 0 rgb(0 0 0 / 15%);
+      padding: 10px;
+      display: none;
+      width: 190px;
+      height: 150px;
+      background-color: white;
+      z-index: 3;
+      position: absolute;
+      top: 90%;
+      left: 90%;
+
+      .delete-click {
+        text-align: center;
+        color: black;
+        cursor: pointer;
+        font-weight: bold;
+
+        &:hover {
+          color: white;
+          background-color: #cccccc;
+        }
+      }
+    }
+
+    .bg-cover {
+      border: thin solid #eee;
+      display: none;
+      position: fixed;
+      background-color: rgba(0, 0, 0, 0);
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 2;
+    }
+  }
+}
+
+.item-empty {
+  input {
+    display: inline-block;
+    width: 100%;
+    padding: 5px 5px 5px 66px;
+    outline: none;
+    font-size: 18px;
+  }
+}
+
+.table {
+  .user-item:first-child {
+    .user-line {
+      padding: 5px;
+      text-align: center;
+    }
+  }
+}
+
+.user-item {
+  height: 36px;
+  width: 800px;
+  display: grid;
+  grid-template-columns: 50px 200px 250px 1fr;
+
+  .user-line {
+    border: solid 1px red;
+
+    .input-user {
+      width: 100%;
+      height: 100%;
+      outline: none;
+      border: none;
+      font-size: 18px;
+      padding-left: 10px;
+      display: inline-block;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
