@@ -7,7 +7,7 @@
 }
 
 .container {
-  width: 1500px;
+  width: 1000px;
   margin: 0 auto;
 }
 
@@ -55,11 +55,21 @@
 
     .link-pop {
       display: block;
+      visibility: visible;
+      opacity: 1;
     }
+
   }
 
   .link-pop {
     display: none;
+    transition: all 0.5s linear;
+    opacity: 0;
+    visibility: hidden;
+
+    i {
+      padding: 0 5px;
+    }
   }
 
   .menu-delete {
@@ -95,6 +105,7 @@
       position: absolute;
       top: 90%;
       left: 90%;
+
       .delete-click {
         text-align: center;
         color: black;
@@ -138,12 +149,6 @@
 
   //grid-template-columns: 1fr 5fr 5fr 5fr 5fr;
 
-  &.err-show {
-    .user-line {
-      .err-mess {
-      }
-    }
-  }
 
   .user-line {
     border: solid 1px #b3d4fc;

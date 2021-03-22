@@ -7,7 +7,7 @@ var baseUrl = 'https://satlegal.ebitc.com/api'
 var list = []
 
 window.getGroup = async function getGroup() {
-  //var endPoint = `${baseUrl}/dummies/groups/?page=${1}`
+  //var endPoint = `${baseUrl}/dummies/groups/?page=${1}/`
   var response = await axios.get(`${baseUrl}/dummies/groups/?page=${1}`)
   try {
     addTitleGroup()
@@ -16,6 +16,7 @@ window.getGroup = async function getGroup() {
     list.forEach(elm => {
       renderGroup(elm)
     })
+    enterToAdd()
     console.log(list)
   } catch (e) {
 
@@ -46,7 +47,7 @@ function addFieldGroup() {
           </div>
         </div>
         <div class="user-line ">
-          <input data-field="name" class="input-user" type="text" data-field='name' onfocusout="addGroup()">
+          <input data-0="name" class="input-user" type="text" data-field='name' onfocusout="addGroup()">
         <div class="err-mess">
             <span err-0 ="name"></span>
         </div>
@@ -96,7 +97,7 @@ function renderGroup(elm) {
           </div>
         </div>
         <div class="user-line">
-          <input class="input-user" type="text" value="${elm.name}" onfocusout="editGroup(${elm.id},event)">
+          <input class="input-user" type="text" value="${elm.name}" data-${elm.id}="name"  onchange="editGroup(${elm.id},event)">
           <div class="err-mess">
             <span err-${elm.id}="name"></span>
           </div>
@@ -107,19 +108,19 @@ function renderGroup(elm) {
 }
 
 function clearField() {
-  var all = document.querySelectorAll('[data-field]')
+  var all = document.querySelectorAll('[data-0]')
   all.forEach(elm => {
     elm.value = ''
   })
 }
 
-function getField() {
-  var allFieldElm = document.querySelectorAll('[data-field]')
+function getDataField(id = 0) {
+  var allFieldElm = document.querySelectorAll(`[data-${id}]`)
   var jsonData = {}
   var formData = new FormData()
-  allFieldElm.forEach(input => {
-    var fieldName = input.getAttribute('data-field')
-    var fieldValue = input.value
+  allFieldElm.forEach(elm => {
+    var fieldName = elm.getAttribute(`data-${id}`)
+    var fieldValue = elm.value
     jsonData[fieldName] = fieldValue
     formData.append([fieldName], fieldValue)
   })
@@ -128,6 +129,7 @@ function getField() {
     formData
   }
 }
+
 
 function renderCount(length) {
   var all = document.querySelectorAll('.count-number')
@@ -157,7 +159,7 @@ window.addGroup = async function addGroup() {
   if (document.querySelector('[data-field]').value === "") {
     return 0
   }
-  var dataPost = getField()
+  var dataPost = getDataField()
   var dataPostFormData = dataPost.formData
   var endPoint = `${baseUrl}/dummies/groups/`
   var newId = null
@@ -169,12 +171,11 @@ window.addGroup = async function addGroup() {
     newId = newGroup.id
     console.log(list)
     clearField()
-    enterToAdd()
-    removeErr(0)
+    removeErr()
 
   } catch (e) {
     if (e.response) {
-      removeErr(0)
+      removeErr()
       var errors = e.response.data
       renderError(0, errors)
     }
@@ -182,7 +183,7 @@ window.addGroup = async function addGroup() {
 }
 
 window.delGroup = async function delGroup(id, e) {
-  var endPoint = `${baseUrl}/dummies/groups/${id}`
+  var endPoint = `${baseUrl}/dummies/groups/${id}/`
   try {
     e.target.parentNode.parentNode.parentNode.parentNode.parentNode.remove()
     var response = await axios.delete(endPoint)
@@ -196,22 +197,39 @@ window.delGroup = async function delGroup(id, e) {
 }
 
 window.editGroup = async function editGroup(id, e) {
-  var endPoint = `${baseUrl}/dummies/groups/${id}`
-  var value = e.target.value
-  var formData = new FormData()
-  formData.append('name', value)
+  var endPoint = `${baseUrl}/dummies/groups/${id}/`
+  // var value = e.target.value
+  var dataPost = getDataField(id)
+  var dataPostFormData = dataPost.formData
   try {
-    var response = await axios.put(endPoint, formData)
+    var response = await axios.put(endPoint, dataPostFormData)
     removeErr(id)
+    var newGroup = response.data
+    initResponseEdit(newGroup, id)
     console.log(response.data)
   } catch (e) {
     if (e.response) {
-      removeErr(0)
       var errors = e.response.data
-      renderError(0, errors)
+      renderError(id, errors)
     }
   }
 }
+
+window.editUser = async function editUser(id) {
+  var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/${id}/`
+  var dataPost = getDataField(id)
+  var dataPostFormData = dataPost.formData
+  try {
+    var response = await axios.put(endPoint, dataPostFormData)
+    removeErr(id)
+    console.log(response)
+  } catch (e) {
+    var a = (e.response.data)
+    removeErr(id)
+    renderError(id, a)
+  }
+}
+
 
 window.showDelete = function showDelete(event) {
   event.target.parentElement.classList.toggle('show')
@@ -278,20 +296,29 @@ function renderUsers(user) {
             <div onclick="showDelete(event)" class="menu-delete ">
               <i class="fas fa-ellipsis-v"></i>
               <div class="menu-delete-detail">
-                <div onclick="delUser(${user.id},getIdGroup,event)" class="delete-click">DELETE</div>
+                <div onclick="delUser(${user.id},event)" class="delete-click">DELETE</div>
               </div>
               <div class="bg-cover"></div>
             </div>
           </div>
         </div>
         <div class="user-line ">
-          <input class="input-user" type="text"  value="${user.first_name}">
+          <input onchange="editUser(${user.id})" data-${user.id}="first_name" class="input-user" type="text"  value="${user.first_name}">
+        <div class="err-mess">
+        <span err-${user.id}="first_name"> </span>
+        </div>
         </div>
         <div class="user-line ">
-          <input class="input-user" type="text"  value="${user.last_name}">
+          <input onchange="editUser(${user.id})" data-${user.id}="last_name" class="input-user" type="text"  value="${user.last_name}">
+          <div class="err-mess">
+            <span err-${user.id}="last_name"></span>
+          </div>
         </div>
         <div class="user-line ">
-          <input class="input-user" type="text"  value="${user.email}">
+          <input onchange="editUser(${user.id})" data-${user.id}="email" class="input-user" type="text"  value="${user.email}">
+          <div class="err-mess">
+         <span err-${user.id}="email"></span>
+          </div>
         </div>
       </div>
   `
@@ -328,7 +355,7 @@ function addFieldUser() {
             <div  class="count-number">
             Add
             </div>
-            <div onclick="addUser(event,getIdGroup)" class="link-pop">
+            <div onclick="addUser(event)" class="link-pop">
               <i class="fas fa-external-link-alt"></i>
             </div>
             <div onclick="showDelete(event)" class="menu-delete ">
@@ -341,19 +368,19 @@ function addFieldUser() {
           </div>
         </div>
         <div class="user-line ">
-          <input class="input-user" type="text" data-field='first_name' ">
+          <input class="input-user" type="text" data-0='first_name' ">
             <div class="err-mess">
                 <span err-0 ="first_name"></span>
              </div>
         </div>
         <div class="user-line ">
-          <input class="input-user" type="text" data-field='last_name' ">
+          <input class="input-user" type="text" data-0='last_name' ">
             <div class="err-mess">
                 <span err-0 ="last_name"></span>
              </div>
         </div>
         <div class="user-line ">
-          <input class="input-user" type="text" data-field='email' ">
+          <input class="input-user" type="text" data-0='email' ">
             <div class="err-mess">
                  <span err-0 ="email"></span>
              </div>
@@ -363,9 +390,9 @@ function addFieldUser() {
   a.insertAdjacentHTML('beforeend', html)
 }
 
-window.addUser = async function addUser(e, callback) {
-  var endPoint = `${baseUrl}/dummies/groups/${callback()}/users/`
-  var dataPost = getField()
+window.addUser = async function addUser(e) {
+  var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/`
+  var dataPost = getDataField()
   var dataPostFormData = dataPost.formData
   try {
     var response = await axios.post(endPoint, dataPostFormData)
@@ -374,6 +401,7 @@ window.addUser = async function addUser(e, callback) {
     renderUsers(newUser)
     removeErr(0)
     console.log(response.data)
+    clearField()
   } catch (e) {
     if (e.response) {
       removeErr(0)
@@ -381,11 +409,17 @@ window.addUser = async function addUser(e, callback) {
       renderError(0, errors)
     }
   }
-
+}
+window.initResponseEdit = function initResponseEdit(newItem, id) {
+  var all = document.querySelectorAll(`[data-${id}]`)
+  all.forEach(elm => {
+    var nameKey = elm.getAttribute(`data-${id}`)
+    elm.value = newItem[nameKey]
+  })
 }
 
-window.delUser = async function delUser(id, callback, e) {
-  var endPoint = `${baseUrl}/dummies/groups/${callback()}/users/${id}`
+window.delUser = async function delUser(id, e) {
+  var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/${id}/`
   try {
     var index = listUser.findIndex(e => e.id == id)
     list.splice(index, 1)
