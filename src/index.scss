@@ -37,9 +37,18 @@
   padding: 5px;
   display: flex;
   justify-content: space-evenly;
-  border-right: thin solid #eee;;
+  border-right: thin solid #eee;
 
-  &:hover {
+  &.addField {
+    cursor: pointer;
+
+    &:hover {
+      transform: scale(1.2);
+
+    }
+  }
+
+  &:not(.addField):hover {
     .count-number {
       display: none;
     }
@@ -82,11 +91,10 @@
       width: 190px;
       height: 150px;
       background-color: white;
-      z-index: 3;
+      z-index: 300;
       position: absolute;
       top: 90%;
       left: 90%;
-
       .delete-click {
         text-align: center;
         color: black;
@@ -114,16 +122,6 @@
   }
 }
 
-.item-empty {
-  input {
-    display: inline-block;
-    width: 100%;
-    padding: 5px 5px 5px 66px;
-    outline: none;
-    font-size: 18px;
-  }
-}
-
 .table {
   .user-item:first-child {
     .user-line {
@@ -135,12 +133,21 @@
 
 .user-item {
   height: 36px;
-  width: 800px;
   display: grid;
-  grid-template-columns: 50px 200px 250px 1fr;
+  grid-template-columns: 50px 300px 250px 1fr;
+
+  //grid-template-columns: 1fr 5fr 5fr 5fr 5fr;
+
+  &.err-show {
+    .user-line {
+      .err-mess {
+      }
+    }
+  }
 
   .user-line {
-    border: solid 1px red;
+    border: solid 1px #b3d4fc;
+    position: relative;
 
     .input-user {
       width: 100%;
@@ -150,9 +157,22 @@
       font-size: 18px;
       padding-left: 10px;
       display: inline-block;
+      background-color: transparent;
+    }
+
+    .err-mess {
+      font-weight: bold;
+      font-style: italic;
+      position: absolute;
+      z-index: 2;
+      top: 60%;
+      left: 10px;
+      color: red;
+      font-size: 12px;
     }
   }
 }
+
 
 
 

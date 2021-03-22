@@ -29,7 +29,7 @@ function addFieldGroup() {
   var html = `
     <div class="user-item">
         <div class="user-line ">
-          <div class="control-delete">
+          <div class="control-delete addField">
             <div  class="count-number">
             Add
             </div>
@@ -47,6 +47,9 @@ function addFieldGroup() {
         </div>
         <div class="user-line ">
           <input data-field="name" class="input-user" type="text" data-field='name' onfocusout="addGroup()">
+        <div class="err-mess">
+            <span err-0 ="name"></span>
+        </div>
         </div>
       </div>
   `
@@ -94,6 +97,9 @@ function renderGroup(elm) {
         </div>
         <div class="user-line">
           <input class="input-user" type="text" value="${elm.name}" onfocusout="editGroup(${elm.id},event)">
+          <div class="err-mess">
+            <span err-${elm.id}="name"></span>
+          </div>
         </div>
       </div>
     `
@@ -130,6 +136,23 @@ function renderCount(length) {
   }
 }
 
+function renderError(id = 0, errors) {
+
+  var errKeys = Object.keys(errors)
+  errKeys.forEach(k => {
+    var arrMess = errors[k]
+    var strMess = arrMess.join()
+    document.querySelector(`[err-${id} = "${k}"]`).textContent = strMess
+  })
+}
+
+function removeErr(id = 0) {
+  var all = document.querySelectorAll(`[err-${id}]`)
+  all.forEach(elm => {
+    elm.textContent = ''
+  })
+}
+
 window.addGroup = async function addGroup() {
   if (document.querySelector('[data-field]').value === "") {
     return 0
@@ -137,13 +160,24 @@ window.addGroup = async function addGroup() {
   var dataPost = getField()
   var dataPostFormData = dataPost.formData
   var endPoint = `${baseUrl}/dummies/groups/`
+  var newId = null
   try {
     var response = await axios.post(endPoint, dataPostFormData)
     var newGroup = response.data
     list.push(newGroup)
     renderGroup(newGroup)
+    newId = newGroup.id
     console.log(list)
+    clearField()
+    enterToAdd()
+    removeErr(0)
+
   } catch (e) {
+    if (e.response) {
+      removeErr(0)
+      var errors = e.response.data
+      renderError(0, errors)
+    }
   }
 }
 
@@ -168,9 +202,14 @@ window.editGroup = async function editGroup(id, e) {
   formData.append('name', value)
   try {
     var response = await axios.put(endPoint, formData)
+    removeErr(id)
     console.log(response.data)
   } catch (e) {
-
+    if (e.response) {
+      removeErr(0)
+      var errors = e.response.data
+      renderError(0, errors)
+    }
   }
 }
 
@@ -199,7 +238,6 @@ function enterToAdd() {
     })
   */
 }
-
 
 var listUser = []
 
@@ -304,12 +342,21 @@ function addFieldUser() {
         </div>
         <div class="user-line ">
           <input class="input-user" type="text" data-field='first_name' ">
+            <div class="err-mess">
+                <span err-0 ="first_name"></span>
+             </div>
         </div>
         <div class="user-line ">
           <input class="input-user" type="text" data-field='last_name' ">
+            <div class="err-mess">
+                <span err-0 ="last_name"></span>
+             </div>
         </div>
         <div class="user-line ">
           <input class="input-user" type="text" data-field='email' ">
+            <div class="err-mess">
+                 <span err-0 ="email"></span>
+             </div>
         </div>
       </div>
   `
@@ -325,10 +372,14 @@ window.addUser = async function addUser(e, callback) {
     var newUser = response.data
     clearField()
     renderUsers(newUser)
+    removeErr(0)
     console.log(response.data)
   } catch (e) {
-
-  } finally {
+    if (e.response) {
+      removeErr(0)
+      var errors = e.response.data
+      renderError(0, errors)
+    }
   }
 
 }
