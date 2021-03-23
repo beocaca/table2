@@ -134,7 +134,13 @@
 }
 
 .table {
+  border: solid 1px blue;
+  background-color: #fff;
+
   .user-item:first-child {
+    border-top: none;
+    background-color: #ebedef;
+
     .user-line {
       padding: 5px;
       text-align: center;
@@ -143,16 +149,59 @@
 }
 
 .user-item {
-  height: 36px;
   display: grid;
-  grid-template-columns: 50px 300px 250px 1fr;
-
-  //grid-template-columns: 1fr 5fr 5fr 5fr 5fr;
-
+  grid-template-columns: 50px 100px 250px 250px 1fr;
+  height: 36px;
+  border-top: solid red 1px;
 
   .user-line {
-    border: solid 1px #b3d4fc;
     position: relative;
+    display: flex;
+    align-items: center;
+    border-right: solid 1px black;
+    padding: 1px;
+
+    :hover {
+      background-color: #F4F4F4;
+    }
+
+    &:last-child {
+      border-right: none;
+    }
+
+    &.box-img {
+      :hover {
+        cursor: pointer;
+      }
+
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      height: 36px;
+
+      img {
+        width: 36px;
+        border: solid 2px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        border-radius: 100%;
+        display: block;
+      }
+
+      input {
+        margin: 0;
+        opacity: 0;
+        padding: 0;
+        visibility: visible;
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        top: 0;
+        left: 0;
+        background: red;
+        cursor: pointer;
+      }
+    }
 
     .input-user {
       width: 100%;
@@ -163,6 +212,10 @@
       padding-left: 10px;
       display: inline-block;
       background-color: transparent;
+
+      &:hover {
+        background-color: #f4f4f4;
+      }
     }
 
     .err-mess {

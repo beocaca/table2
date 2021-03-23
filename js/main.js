@@ -5,6 +5,7 @@ import axios from "axios";
 var baseUrl = 'https://satlegal.ebitc.com/api'
 
 var list = []
+var avtDefault = 'https://ehoadonvnpt.vn/public/uploads/system/noavatar.gif'
 
 window.getGroup = async function getGroup() {
   //var endPoint = `${baseUrl}/dummies/groups/?page=${1}/`
@@ -47,7 +48,7 @@ function addFieldGroup() {
           </div>
         </div>
         <div class="user-line ">
-          <input data-0="name" class="input-user" type="text" data-field='name' onfocusout="addGroup()">
+          <input data-0="name" class="input-user" type="text" data-field='name' onchange="addGroup()">
         <div class="err-mess">
             <span err-0 ="name"></span>
         </div>
@@ -108,21 +109,49 @@ function renderGroup(elm) {
 }
 
 function clearField() {
+
   var all = document.querySelectorAll('[data-0]')
   all.forEach(elm => {
+    if(elm.files){
+      document.querySelector('[last-img-add]').src = avtDefault
+    }
     elm.value = ''
   })
+}
+
+window.changeFileUpload = function changeFileUpload(evt) {
+  var elmInput = evt.target
+  var files = elmInput.files
+  var imgHolder = elmInput.nextElementSibling
+  if (files && files[0]) {
+    var FR = new FileReader()
+    FR.onload = function (e) {
+      imgHolder.src = e.target.result
+    }
+    FR.readAsDataURL(files[0])
+  }
 }
 
 function getDataField(id = 0) {
   var allFieldElm = document.querySelectorAll(`[data-${id}]`)
   var jsonData = {}
   var formData = new FormData()
+
   allFieldElm.forEach(elm => {
     var fieldName = elm.getAttribute(`data-${id}`)
-    var fieldValue = elm.value
-    jsonData[fieldName] = fieldValue
-    formData.append([fieldName], fieldValue)
+    var isFieldUpload = elm.files
+    if (isFieldUpload) {
+      var arrFiles = Object.values(elm.files)
+      for (var i = 0; i < arrFiles.length; i++) {
+        jsonData[fieldName] = arrFiles[i]
+        formData.append([fieldName], arrFiles[i])
+      }
+
+    } else {
+      var fieldValue = elm.value
+      jsonData[fieldName] = fieldValue
+      formData.append(fieldName, fieldValue)
+    }
   })
   return {
     jsonData,
@@ -169,10 +198,9 @@ window.addGroup = async function addGroup() {
     list.push(newGroup)
     renderGroup(newGroup)
     newId = newGroup.id
+    clearField(0)
     console.log(list)
-    clearField()
     removeErr()
-
   } catch (e) {
     if (e.response) {
       removeErr()
@@ -204,8 +232,8 @@ window.editGroup = async function editGroup(id, e) {
   try {
     var response = await axios.put(endPoint, dataPostFormData)
     removeErr(id)
-    var newGroup = response.data
-    initResponseEdit(newGroup, id)
+    /*  var newGroup = response.data
+      initResponseEdit(newGroup, id)*/
     console.log(response.data)
   } catch (e) {
     if (e.response) {
@@ -279,9 +307,13 @@ window.getUsers = async function getUsers(groupID) {
 
 // href="http://localhost:1234/user.html/namlala=${user.id}"
 
+
 function renderUsers(user) {
   var all = document.querySelectorAll('.user-item')
   var a = all[all.length - 1]
+  if (user.avatar == null) {
+    user.avatar = avtDefault
+  }
 
   var html = `
       <div class="user-item">
@@ -302,6 +334,15 @@ function renderUsers(user) {
             </div>
           </div>
         </div>
+
+        <div class="user-line box-img">
+          <input multiple accept="image/*" onchange="editUser(${user.id}),changeFileUpload(event)" data-${user.id}="avatar" class="input-user" type="file" value="${user.avatar}">
+          <img src="${user.avatar}">
+          <div class="err-mess">
+              <span err-${user.id}="first_name"> </span>
+          </div>
+        </div>
+
         <div class="user-line ">
           <input onchange="editUser(${user.id})" data-${user.id}="first_name" class="input-user" type="text"  value="${user.first_name}">
         <div class="err-mess">
@@ -328,9 +369,12 @@ function renderUsers(user) {
 function addTitleUser() {
   var a = document.querySelector('#table')
   var html = `
-        <div class="user-item">
+       <div class="user-item">
         <div class="user-line user-stt">
           <span>Id</span>
+        </div>
+        <div class="user-line user-avatar">
+          <span>Avatar</span>
         </div>
         <div class="user-line user-first">
           <span>FirstName</span>
@@ -367,6 +411,13 @@ function addFieldUser() {
             </div>
           </div>
         </div>
+        <div class="user-line box-img">
+          <input class="input-user" type="file" data-0='avatar' onchange="changeFileUpload(event)">
+          <img last-img-add src="${avtDefault}" alt="">
+            <div class="err-mess">
+                <span err-0 ="avatar"></span>
+            </div>
+        </div>
         <div class="user-line ">
           <input class="input-user" type="text" data-0='first_name' ">
             <div class="err-mess">
@@ -390,18 +441,17 @@ function addFieldUser() {
   a.insertAdjacentHTML('beforeend', html)
 }
 
-window.addUser = async function addUser(e) {
+window.addUser = async function addUser() {
   var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/`
   var dataPost = getDataField()
   var dataPostFormData = dataPost.formData
   try {
     var response = await axios.post(endPoint, dataPostFormData)
     var newUser = response.data
-    clearField()
     renderUsers(newUser)
     removeErr(0)
-    console.log(response.data)
     clearField()
+    console.log(response.data)
   } catch (e) {
     if (e.response) {
       removeErr(0)
@@ -410,6 +460,7 @@ window.addUser = async function addUser(e) {
     }
   }
 }
+
 window.initResponseEdit = function initResponseEdit(newItem, id) {
   var all = document.querySelectorAll(`[data-${id}]`)
   all.forEach(elm => {
@@ -442,13 +493,6 @@ function reset() {
   document.querySelector('#table').innerHTML = ''
 }
 
-window.pushStateUser = function pushStateUser(id, e) {
-  e.preventDefault()
-  history.pushState({id}, `Selected=${id}`, `./?group=${id}`)
-  reset();
-  getUsers(id);
-  console.log(e)
-}
 
 window.getIdGroup = function getIdGroup() {
   var a = location.href
@@ -457,23 +501,40 @@ window.getIdGroup = function getIdGroup() {
   return c
 }
 
+window.pushStateUser = function pushStateUser(id, e) {
+  e.preventDefault()
+  // history.pushState({id}, `Selected=${id}`, `/user.html?group=${id}`)
+  history.pushState({id}, `Selected=${id}`, `index.html?group=${id}`)
+  reset();
+  getUsers(id);
+  console.log(e)
+}
+
 window.addEventListener('popstate', e => {
   reset()
   console.log(e);
-  if (e.state.id !== null) {
+  if (e.state && e.state.id !== null) {
     getUsers(e.state.id)
   } else {
     getGroup()
   }
 })
 
-history.replaceState({id: null}, `Default`, `./`)
+//history.replaceState({id: null}, `Default`, `./`)
 
+window.onpopstate = function(event) {
+  console.log(`location: ${document.location}, state: ${JSON.stringify(event.state)}`)
+};
 
+(_ => {
+  let groupID = getIdGroup();
+  if (groupID) {
+    getUsers(groupID)
+  }else {
+    getGroup()
+  }
 
-
-
-
+})();
 
 
 
