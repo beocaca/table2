@@ -9,43 +9,19 @@
 .container {
   width: 1000px;
   margin: 0 auto;
-}
-
-.item-field {
-  display: flex;
-  border-bottom: thin solid #eee;;
-  background-color: #fff;
-
-  .item-input {
-    padding-left: 20px;
-    display: inline-block;
-    font-size: 18px;
-    line-height: 18px;
-    width: 100%;
-    outline: none;
-    border: none;
-
-    &:hover {
-      background-color: #f4f4f4;
-    }
-  }
-
+  padding: 30px;
 }
 
 .control-delete {
   min-width: 46px;
-  padding: 5px;
   display: flex;
   justify-content: space-evenly;
-  border-right: thin solid #eee;
+  height: 100%;
+  width: 100%;
+  align-items: center;
 
   &.addField {
     cursor: pointer;
-
-    &:hover {
-      transform: scale(1.2);
-
-    }
   }
 
   &:not(.addField):hover {
@@ -65,7 +41,6 @@
     display: none;
     transition: all 0.5s linear;
     opacity: 0;
-    visibility: hidden;
 
     i {
       padding: 0 5px;
@@ -76,7 +51,8 @@
     position: relative;
 
     &.show {
-      .menu-delete-detail, .bg-cover {
+      .menu-delete-detail,
+      .bg-cover {
         display: block;
       }
     }
@@ -106,6 +82,10 @@
       top: 90%;
       left: 90%;
 
+      &:hover {
+        background-color: #fff;
+      }
+
       .delete-click {
         text-align: center;
         color: black;
@@ -120,7 +100,6 @@
     }
 
     .bg-cover {
-      border: thin solid #eee;
       display: none;
       position: fixed;
       background-color: rgba(0, 0, 0, 0);
@@ -129,40 +108,58 @@
       right: 0;
       bottom: 0;
       z-index: 2;
+      opacity: 0;
     }
   }
 }
 
 .table {
-  border: solid 1px blue;
+  border: solid 1px #e0e0e0;
   background-color: #fff;
+  position: relative;
 
   .user-item:first-child {
+    position: sticky;
+    top: 0;
+    z-index: 9;
     border-top: none;
     background-color: #ebedef;
-
-    .user-line {
-      padding: 5px;
-      text-align: center;
-    }
   }
+
+  .user-item:last-child {
+    position: sticky;
+    z-index: 9;
+    bottom: 0;
+    background-color: white;
+  }
+
 }
 
 .user-item {
   display: grid;
-  grid-template-columns: 50px 100px 250px 250px 1fr;
+  grid-template-columns: 50px 80px 250px 250px 1fr;
+  border-top: solid #e0e0e0 1px;
   height: 36px;
-  border-top: solid red 1px;
+
+  &.user-item-group {
+    grid-template-columns: 50px 1fr;
+  }
 
   .user-line {
     position: relative;
     display: flex;
     align-items: center;
-    border-right: solid 1px black;
-    padding: 1px;
+    border-right: solid 1px #e0e0e0;
 
-    :hover {
-      background-color: #F4F4F4;
+    &.user-tittle {
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+
+      &:hover {
+        background-color: #cccccc;
+      }
     }
 
     &:last-child {
@@ -170,17 +167,17 @@
     }
 
     &.box-img {
-      :hover {
-        cursor: pointer;
-      }
-
       overflow: hidden;
       cursor: pointer;
       display: flex;
       justify-content: center;
-      height: 36px;
+
+      :hover {
+        cursor: pointer;
+      }
 
       img {
+        height: 100%;
         width: 36px;
         border: solid 2px rgba(0, 0, 0, 0.06);
         overflow: hidden;
@@ -213,8 +210,9 @@
       display: inline-block;
       background-color: transparent;
 
-      &:hover {
-        background-color: #f4f4f4;
+      &:hover,
+      &:focus {
+        background-color: #eee;
       }
     }
 

@@ -7,17 +7,21 @@ var baseUrl = 'https://satlegal.ebitc.com/api'
 var list = []
 var avtDefault = 'https://ehoadonvnpt.vn/public/uploads/system/noavatar.gif'
 
-window.getGroup = async function getGroup() {
-  //var endPoint = `${baseUrl}/dummies/groups/?page=${1}/`
-  var response = await axios.get(`${baseUrl}/dummies/groups/?page=${1}`)
+window.getGroup = async function getGroup(page = 1) {
+  // history.pushState({id: page}, `sad`, `.?page=${page}`)
+  var endPoint = `${baseUrl}/dummies/groups/?page=${page}`
   try {
+    reset()
+    var response = await axios.get(endPoint)
+    var countPages = Math.ceil(response.data.count / 20)
+    renderCountPage(countPages, page)
     addTitleGroup()
     addFieldGroup()
     list = [...response.data.results]
     list.forEach(elm => {
       renderGroup(elm)
     })
-    enterToAdd()
+    enterToAdd(addGroup)
     console.log(list)
   } catch (e) {
 
@@ -29,26 +33,16 @@ window.getGroup = async function getGroup() {
 function addFieldGroup() {
   var a = document.querySelector('#table')
   var html = `
-    <div class="user-item">
+    <div class="user-item user-item-group">
         <div class="user-line ">
           <div class="control-delete addField">
-            <div  class="count-number">
+            <div onclick="" class="count-number">
             Add
-            </div>
-            <div onclick="" class="link-pop">
-              <i class="fas fa-external-link-alt"></i>
-            </div>
-            <div onclick="" class="menu-delete ">
-              <i class="fas fa-ellipsis-v"></i>
-              <div class="menu-delete-detail">
-                <div class="delete-click">DELETE</div>
-              </div>
-              <div class="bg-cover"></div>
             </div>
           </div>
         </div>
         <div class="user-line ">
-          <input data-0="name" class="input-user" type="text" data-field='name' onchange="addGroup()">
+          <input data-0="name" class="input-user" type="text" onchange="addGroup()">
         <div class="err-mess">
             <span err-0 ="name"></span>
         </div>
@@ -61,12 +55,13 @@ function addFieldGroup() {
 function addTitleGroup() {
   var a = document.querySelector('#table')
   var html = `
-        <div class="user-item">
-        <div class="user-line">
-          <span>Id</span>
+        <div class="user-item user-item-group">
+
+        <div class="user-line user-tittle">
+          Id
         </div>
-        <div class="user-line">
-          <span>Group</span>
+        <div class="user-line user-tittle">
+          Group
         </div>
       </div>
   `
@@ -79,7 +74,7 @@ function renderGroup(elm) {
   var all = document.querySelectorAll('.user-item')
   var a = all[all.length - 1]
   var html = `
-      <div class="user-item">
+      <div class="user-item user-item-group">
         <div class="user-line">
           <div class="control-delete">
             <div class="count-number">
@@ -112,7 +107,7 @@ function clearField() {
 
   var all = document.querySelectorAll('[data-0]')
   all.forEach(elm => {
-    if(elm.files){
+    if (elm.files) {
       document.querySelector('[last-img-add]').src = avtDefault
     }
     elm.value = ''
@@ -159,6 +154,36 @@ function getDataField(id = 0) {
   }
 }
 
+function renderCountPage(length, page) {
+  var html = ''
+  for (var i = 1; i <= length; i++) {
+    var btnDiss = ''
+
+    if (i === page) {
+      btnDiss = 'disabled'
+    }
+    html += `
+        <button ${btnDiss} onclick="getGroup(${i})"> Page ${i}</button>
+            `
+  }
+  document.querySelector('#count-page').innerHTML = html
+}
+
+function renderCountPageUser(length, page) {
+  var html = ''
+  for (var i = 1; i <= length; i++) {
+    var btnDiss = ''
+
+    if (i === page) {
+      btnDiss = 'disabled'
+    }
+    html += `
+        <button ${btnDiss} onclick="getUsers(getIdGroup(),${i})"> Page ${i}</button>
+            `
+  }
+  document.querySelector('#count-page').innerHTML = html
+}
+
 
 function renderCount(length) {
   var all = document.querySelectorAll('.count-number')
@@ -184,8 +209,13 @@ function removeErr(id = 0) {
   })
 }
 
+function scrollTop() {
+  var a = document.querySelector('#table')
+  a.scrollTop = a.scrollHeight
+}
+
 window.addGroup = async function addGroup() {
-  if (document.querySelector('[data-field]').value === "") {
+  if (document.querySelector('[data-0]').value === "") {
     return 0
   }
   var dataPost = getDataField()
@@ -199,6 +229,7 @@ window.addGroup = async function addGroup() {
     renderGroup(newGroup)
     newId = newGroup.id
     clearField(0)
+    scrollTop()
     console.log(list)
     removeErr()
   } catch (e) {
@@ -263,40 +294,35 @@ window.showDelete = function showDelete(event) {
   event.target.parentElement.classList.toggle('show')
 }
 
-function enterToAdd() {
-  var a = document.querySelector('[data-field="name"]')
-  a.addEventListener("keyup", e => {
-    if (e.isComposing || e.keyCode === 13) {
-      addGroup()
-    }
-  });
+function enterToAdd(callback) {
+  var all = document.querySelectorAll('[data-0]')
+  all.forEach(a => {
+    a.addEventListener("keyup", e => {
+      if (e.isComposing || e.keyCode === 13) {
+        callback()
+        console.log('Nam Enter')
+      }
+    });
+  })
 
-  /*
-    var all = document.querySelectorAll('[group-id]')
-    all.forEach(elm => {
-      var id = elm.getAttribute('group-id')
-      elm.addEventListener("keyup", e => {
-        if (e.isComposing || e.keyCode === 13) {
-          editGroup(`${id}`, event)
-        }
-        // do something
-      });
-    })
-  */
 }
 
 var listUser = []
 
-window.getUsers = async function getUsers(groupID) {
-  var endPoint = `${baseUrl}/dummies/groups/${groupID}/users/`
+window.getUsers = async function getUsers(groupID, page = 1) {
+  var endPoint = `${baseUrl}/dummies/groups/${groupID}/users/?page=${page}`
   try {
-    var respone = await axios.get(endPoint)
-    listUser = [...respone.data.results]
+    reset()
+    var response = await axios.get(endPoint)
+    var countPages = Math.ceil(response.data.count / 20)
+    renderCountPageUser(countPages, page)
+    listUser = [...response.data.results]
     addTitleUser()
     addFieldUser()
     listUser.forEach(elm => {
       renderUsers(elm)
     })
+    enterToAdd(addUser)
     console.log(listUser)
   } catch (e) {
 
@@ -314,7 +340,7 @@ function renderUsers(user) {
   if (user.avatar == null) {
     user.avatar = avtDefault
   }
-
+//http://localhost:1234/index.html
   var html = `
       <div class="user-item">
         <div class="user-line ">
@@ -323,7 +349,7 @@ function renderUsers(user) {
               ${user.id}
             </div>
             <div class="link-pop">
-              <a href="http://localhost:1234/user.html/namlala=${user.id}" ><i class="fas fa-external-link-alt"></i></a>
+              <a onclick="pushStateUserDetail(event)" href=""><i class="fas fa-external-link-alt"></i></a>
             </div>
             <div onclick="showDelete(event)" class="menu-delete ">
               <i class="fas fa-ellipsis-v"></i>
@@ -370,20 +396,20 @@ function addTitleUser() {
   var a = document.querySelector('#table')
   var html = `
        <div class="user-item">
-        <div class="user-line user-stt">
-          <span>Id</span>
+        <div class="user-line user-tittle">
+        ID
         </div>
-        <div class="user-line user-avatar">
-          <span>Avatar</span>
+        <div class="user-line user-tittle">
+        Avatar
         </div>
-        <div class="user-line user-first">
-          <span>FirstName</span>
+        <div class="user-line user-tittle">
+        FirstName
         </div>
-        <div class="user-line user-last">
-          <span>LastName</span>
+        <div class="user-line user-tittle">
+        LastName
         </div>
-        <div class="user-line user-email">
-          <span>Email</span>
+        <div class="user-line user-tittle">
+        Email
         </div>
       </div>
   `
@@ -395,19 +421,9 @@ function addFieldUser() {
   var html = `
     <div class="user-item">
         <div class="user-line ">
-          <div class="control-delete">
-            <div  class="count-number">
+          <div class="control-delete addField">
+            <div  class="count-number" onclick="addUser(event)">
             Add
-            </div>
-            <div onclick="addUser(event)" class="link-pop">
-              <i class="fas fa-external-link-alt"></i>
-            </div>
-            <div onclick="showDelete(event)" class="menu-delete ">
-              <i class="fas fa-ellipsis-v"></i>
-              <div class="menu-delete-detail">
-                <div class="delete-click">DELETE</div>
-              </div>
-              <div class="bg-cover"></div>
             </div>
           </div>
         </div>
@@ -503,37 +519,42 @@ window.getIdGroup = function getIdGroup() {
 
 window.pushStateUser = function pushStateUser(id, e) {
   e.preventDefault()
-  // history.pushState({id}, `Selected=${id}`, `/user.html?group=${id}`)
-  history.pushState({id}, `Selected=${id}`, `index.html?group=${id}`)
+  history.pushState({id}, `Selected=${id}`, `./?group=${id}`)
   reset();
-  getUsers(id);
+  getUsers(id, undefined);
   console.log(e)
 }
+
+window.pushStateUserDetail = function pushStateUserDetail(e) {
+  e.preventDefault()
+  history.pushState({id: null}, `Default`, `./`)
+  reset();
+  getGroup(1)
+}
+
 
 window.addEventListener('popstate', e => {
   reset()
   console.log(e);
   if (e.state && e.state.id !== null) {
-    getUsers(e.state.id)
+    getUsers(e.state.id, undefined)
   } else {
-    getGroup()
+    getGroup(1)
   }
 })
 
-//history.replaceState({id: null}, `Default`, `./`)
+// history.replaceState({id: null}, `Default`, `./`)
 
-window.onpopstate = function(event) {
-  console.log(`location: ${document.location}, state: ${JSON.stringify(event.state)}`)
-};
+;
 
+// need a ";" before
 (_ => {
   let groupID = getIdGroup();
   if (groupID) {
-    getUsers(groupID)
-  }else {
-    getGroup()
+    getUsers(groupID, undefined)
+  } else {
+    getGroup(undefined)
   }
-
 })();
 
 
