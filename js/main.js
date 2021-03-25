@@ -21,7 +21,7 @@ window.getGroup = async function getGroup(page = 1) {
     list.forEach(elm => {
       renderGroup(elm)
     })
-    enterToAdd(addGroup)
+    focusNext(addGroup)
     console.log(list)
   } catch (e) {
 
@@ -197,8 +197,8 @@ function renderError(id = 0, errors) {
   var errKeys = Object.keys(errors)
   errKeys.forEach(k => {
     var arrMess = errors[k]
-    var strMess = arrMess.join()
-    document.querySelector(`[err-${id} = "${k}"]`).textContent = strMess
+    var mess = arrMess.join()
+    document.querySelector(`[err-${id} = "${k}"]`).textContent = mess
   })
 }
 
@@ -322,8 +322,9 @@ window.getUsers = async function getUsers(groupID, page = 1) {
     listUser.forEach(elm => {
       renderUsers(elm)
     })
-    enterToAdd(addUser)
+    // enterToAdd(addUser)
     console.log(listUser)
+    focusNext(addUser)
   } catch (e) {
 
   } finally {
@@ -435,19 +436,19 @@ function addFieldUser() {
             </div>
         </div>
         <div class="user-line ">
-          <input class="input-user" type="text" data-0='first_name' ">
+          <input class="input-user" type="text" data-0='first_name' >
             <div class="err-mess">
                 <span err-0 ="first_name"></span>
              </div>
         </div>
         <div class="user-line ">
-          <input class="input-user" type="text" data-0='last_name' ">
+          <input class="input-user" type="text" data-0='last_name' >
             <div class="err-mess">
                 <span err-0 ="last_name"></span>
              </div>
         </div>
         <div class="user-line ">
-          <input class="input-user" type="text" data-0='email' ">
+          <input class="input-user" type="text" data-0='email' >
             <div class="err-mess">
                  <span err-0 ="email"></span>
              </div>
@@ -468,6 +469,7 @@ window.addUser = async function addUser() {
     removeErr(0)
     clearField()
     console.log(response.data)
+    focusNext(addUser)
   } catch (e) {
     if (e.response) {
       removeErr(0)
@@ -496,6 +498,46 @@ window.delUser = async function delUser(id, e) {
   } catch (e) {
   }
 }
+
+window.focusNext = function focusNext(callback) {
+  var arrName = []
+  var all = document.querySelectorAll('[data-0]:not([type="file"])')
+  all.forEach(input => {
+    var name = input.getAttribute('data-0')
+    arrName.push(name)
+  })
+
+  document.addEventListener('keyup', e => {
+    var name = e.target.getAttribute('data-0')
+    var isEnter = e.keyCode === 13
+
+    for (var i = 0; i < arrName.length - 1; i++) {
+      if (isEnter && arrName[i] === name && !arrName.length - 1) {
+        document.querySelector(`[data-0="${arrName[i + 1]}"]`).focus()
+        console.log('123456798')
+      }
+    }
+    if (isEnter && arrName[arrName.length - 1] === name) {
+      callback()
+      document.querySelector(`[data-0="${arrName[0]}"]`).focus()
+    }
+
+  })
+}
+
+
+/*
+input.addEventListener("keyup", (e) => {
+  e.preventDefault()
+  for (var i = 0; i <= arrName.length; i++) {
+    if (e.keyCode === 13)
+      console.log(e.target)
+    // document.querySelector(`[data-0="${arrName[i + 1]}}"]`).focus()
+    console.log(arrName)
+  }
+})
+*/
+
 
 function initFormValue(item) {
   var all = document.querySelectorAll(`[data-name]`)
