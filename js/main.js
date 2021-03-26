@@ -27,8 +27,7 @@ window.getGroup = async function getGroup(page = 1) {
     })
     focusNext(addGroup)
     addBtn()
-
-    console.log(Math.ceil(countedItem / 20))
+    console.log(response.data)
   } catch (e) {
 
   } finally {
@@ -195,6 +194,8 @@ function checkValue(id = 0) {
   var checkArr = []
   var all = document.querySelectorAll(`[data-${id}]:not([type="file"])`)
   var allArr = Array.from(all)
+  var allErr = document.querySelectorAll(`[err-${id}]`)
+  allErr.forEach(e => e.textContent = '')
   allArr.forEach(elm => {
     var x = elm.getAttribute(`data-${id}`)
     elm.classList.remove('validate-box')
@@ -202,7 +203,7 @@ function checkValue(id = 0) {
       if (validateEmail(elm.value) === false) {
         elm.classList.toggle('validate-box')
         checkArr.push(false)
-        document.querySelector(`[err-${id}='email']`).textContent = 'Type Email Not Correct'
+        document.querySelector(`[err-${id}='email']`).textContent = 'Type Email NOT Correct'
       } else {
         checkArr.push(true)
       }
@@ -420,9 +421,9 @@ window.getUsers = async function getUsers(groupID, page = 1) {
   try {
     reset()
     var response = await axios.get(endPoint)
-    renderCountItem(response.data.count)
-    var countPages = Math.ceil(response.data.count / 20)
-    renderCountPageUser(countPages, page)
+    countedItem = response.data.count
+    renderCountItem(countedItem)
+    renderCountPageUser(Math.ceil(countedItem / 20), page)
     listUser = [...response.data.results]
     addTitleUser()
     addFieldUser()
@@ -569,6 +570,9 @@ window.addUser = async function addUser() {
       apiRun(0, true)
       var response = await axios.post(endPoint, dataPostFormData)
       var newUser = response.data
+      countedItem+=1
+      renderCountItem(countedItem)
+      renderCountPageUser(Math.ceil(countedItem / 20), 1)
       renderUsers(newUser)
       removeErr(0)
       clearField()
@@ -610,6 +614,9 @@ function apiRun(id = 0, trueFasle) {
 window.delUser = async function delUser(id, e) {
   var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/${id}/`
   try {
+    countedItem-=1
+    renderCountItem(countedItem)
+    renderCountPageUser(Math.ceil(countedItem / 20), 1)
     var index = listUser.findIndex(e => e.id == id)
     list.splice(index, 1)
     var response = await axios.delete(endPoint)
@@ -699,7 +706,7 @@ window.addEventListener('popstate', e => {
   if (groupID) {
     getUsers(groupID, undefined)
   } else {
-    getGroup(undefined)
+    getGroup(1)
   }
 })();
 
