@@ -15,13 +15,17 @@
 .control-delete {
   min-width: 46px;
   display: flex;
-  justify-content: space-evenly;
+  justify-content: space-between;
   height: 100%;
   width: 100%;
   align-items: center;
 
   &.addField {
     cursor: pointer;
+  }
+
+  .count-number {
+    flex: 1;
   }
 
   &:not(.addField):hover {
@@ -49,6 +53,7 @@
 
   .menu-delete {
     position: relative;
+    width: 15px;
 
     &.show {
       .menu-delete-detail,
@@ -80,7 +85,7 @@
       z-index: 300;
       position: absolute;
       top: 90%;
-      left: 90%;
+      left: 0%;
 
       &:hover {
         background-color: #fff;
@@ -118,6 +123,12 @@
   background-color: #fff;
   position: relative;
 
+  &.show-add-user {
+    .last-user-item {
+      display: grid;
+    }
+  }
+
   .user-item:first-child {
     position: sticky;
     top: 0;
@@ -125,14 +136,6 @@
     border-top: none;
     background-color: #ebedef;
   }
-
-  .user-item:last-child {
-    position: sticky;
-    z-index: 9;
-    bottom: 0;
-    background-color: white;
-  }
-
 }
 
 .user-item {
@@ -140,6 +143,30 @@
   grid-template-columns: 50px 80px 250px 250px 1fr;
   border-top: solid #e0e0e0 1px;
   height: 36px;
+
+  &.add-item {
+    display: flex;
+    align-items: center;
+    padding-left: 20px;
+    color: #5dc6ff;
+    letter-spacing: 2px;
+    font-size: 18px;
+
+    &:hover {
+      background-color: #f4f4f4f4;
+    }
+  }
+
+  &.last-user-item {
+    font-weight: bold;
+    text-align: center;
+    color: red;
+    position: sticky;
+    z-index: 9;
+    bottom: 0;
+    background-color: white;
+    display: none;
+  }
 
   &.user-item-group {
     grid-template-columns: 50px 1fr;
@@ -213,6 +240,10 @@
       &:hover,
       &:focus {
         background-color: #eee;
+      }
+
+      &.validate-box {
+        background-color: red;
       }
     }
 
