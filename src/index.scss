@@ -244,7 +244,8 @@
       }
 
       &.validate-box {
-        background-color: red;
+        font-weight: bold;
+        background-color: wheat;
       }
     }
 
@@ -263,9 +264,18 @@
 
 .main-tittle {
   display: flex;
-  border: solid red;
-  font-size: 18px;
-  justify-content: space-evenly;
+  font-size: 20px;
+  justify-content: space-between;
+  height: 36px;
+
+  .count-item {
+    padding: 0 20px;
+  }
+
+  .count-page {
+    padding: 0 20px;
+
+  }
 }
 
 

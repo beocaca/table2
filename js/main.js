@@ -186,18 +186,23 @@ function validateEmail(email) {
   return re.test(String(email).toLowerCase());
 }
 
+function addTextErr(id) {
+  document.querySelector(`[err-${id}]`).textContent = 'sai Field'
+}
+
 
 function checkValue(id = 0) {
   var checkArr = []
   var all = document.querySelectorAll(`[data-${id}]:not([type="file"])`)
   var allArr = Array.from(all)
   allArr.forEach(elm => {
-    var name = elm.getAttribute(`data-${id}`)
+    var x = elm.getAttribute(`data-${id}`)
     elm.classList.remove('validate-box')
-    if (name === 'email') {
+    if (x === 'email') {
       if (validateEmail(elm.value) === false) {
         elm.classList.toggle('validate-box')
         checkArr.push(false)
+        document.querySelector(`[err-${id}='email']`).textContent = 'Type Email Not Correct'
       } else {
         checkArr.push(true)
       }
@@ -205,6 +210,7 @@ function checkValue(id = 0) {
       if (validateName(elm.value) === false) {
         checkArr.push(false)
         elm.classList.toggle('validate-box')
+        document.querySelector(`[err-${id}=${x}]`).textContent = '3 -> 15 Chars Please'
       } else {
         checkArr.push(true)
       }
@@ -261,7 +267,6 @@ function renderCount(length) {
 }
 
 function renderError(id = 0, errors) {
-
   var errKeys = Object.keys(errors)
   errKeys.forEach(k => {
     var arrMess = errors[k]
@@ -289,6 +294,7 @@ window.addGroup = async function addGroup() {
       var endPoint = `${baseUrl}/dummies/groups/`
       var dataPost = getDataField()
       var dataPostFormData = dataPost.formData
+      apiRun(0, true)
       var response = await axios.post(endPoint, dataPostFormData)
       var newGroup = response.data
       list.push(newGroup)
@@ -300,9 +306,7 @@ window.addGroup = async function addGroup() {
       renderCountPageGroup(Math.ceil(countedItem / 20), 1)
       renderCountItem(countedItem)
       console.log(list)
-
     } else {
-      alert('Wrong Validate Field')
       return 0
     }
   } catch (e) {
@@ -311,6 +315,8 @@ window.addGroup = async function addGroup() {
       var errors = e.response.data
       renderError(0, errors)
     }
+  } finally {
+    apiRun(0, false)
   }
 }
 
@@ -344,16 +350,14 @@ window.editGroup = async function editGroup(id, e) {
   try {
     if (checkValue(id).every(x => x)) {
       // show loading
+      apiRun(id, true)
       var response = await axios.put(endPoint, dataPostFormData)
-      await sleep(2000);
-      alert(43434)
       // hide loading
       removeErr(id)
       /*  var newGroup = response.data
         initResponseEdit(newGroup, id)*/
       console.log(response.data)
     } else {
-      alert('Wrong Validate Field')
       return 0
     }
   } catch (e) {
@@ -361,6 +365,9 @@ window.editGroup = async function editGroup(id, e) {
       var errors = e.response.data
       renderError(id, errors)
     }
+  } finally {
+    apiRun(id, false)
+
   }
 }
 
@@ -370,12 +377,12 @@ window.editUser = async function editUser(id) {
   var dataPostFormData = dataPost.formData
   try {
     if (checkValue(id).every(x => x)) {
+      apiRun(id, true)
+
       var response = await axios.put(endPoint, dataPostFormData)
       removeErr(id)
       console.log(response)
     } else {
-      alert('Wrong Validate Field')
-
       return 0
     }
 
@@ -383,6 +390,8 @@ window.editUser = async function editUser(id) {
     var a = (e.response.data)
     removeErr(id)
     renderError(id, a)
+  } finally {
+    apiRun(id, false)
   }
 }
 
@@ -557,14 +566,13 @@ window.addUser = async function addUser() {
   var dataPostFormData = dataPost.formData
   try {
     if (checkValue(0).every(x => x)) {
+      apiRun(0, true)
       var response = await axios.post(endPoint, dataPostFormData)
       var newUser = response.data
       renderUsers(newUser)
       removeErr(0)
       clearField()
     } else {
-      alert('Wrong Validate Field')
-
       return 0
     }
   } catch (e) {
@@ -573,6 +581,8 @@ window.addUser = async function addUser() {
       var errors = e.response.data
       renderError(0, errors)
     }
+  } finally {
+    apiRun(0, false)
   }
 }
 
@@ -583,6 +593,19 @@ window.initResponseEdit = function initResponseEdit(newItem, id) {
     elm.value = newItem[nameKey]
   })
 }
+
+function apiRun(id = 0, trueFasle) {
+  var a = 'setAttribute'
+  if (!trueFasle) {
+    a = 'removeAttribute'
+  }
+  var all = document.querySelectorAll(`[data-${id}]:not([type="file"])`)
+  all.forEach(elm => {
+    elm[`${a}`]('disabled', '')
+    all[0].focus()
+  })
+}
+
 
 window.delUser = async function delUser(id, e) {
   var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/${id}/`
@@ -616,33 +639,9 @@ window.focusNext = function focusNext(callback) {
     }
     if (isEnter && arrName[arrName.length - 1] == name) {
       callback()
-      document.querySelector(`[data-0="${arrName[0]}"]`).focus()
     }
   })
 }
-
-function focusNext2() {
-  var all = document.querySelectorAll('[data-0]:not([type="file"])')
-  all.forEach(elm => {
-
-  })
-
-
-}
-
-
-/*
-input.addEventListener("keyup", (e) => {
-  e.preventDefault()
-  for (var i = 0; i <= arrName.length; i++) {
-    if (e.keyCode === 13)
-      console.log(e.target)
-    // document.querySelector(`[data-0="${arrName[i + 1]}}"]`).focus()
-    console.log(arrName)
-  }
-})
-*/
-
 
 function initFormValue(item) {
   var all = document.querySelectorAll(`[data-name]`)
