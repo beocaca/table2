@@ -145,6 +145,7 @@
   height: 36px;
 
   &.add-item {
+    cursor: pointer;
     display: flex;
     align-items: center;
     padding-left: 20px;
@@ -258,6 +259,13 @@
       font-size: 12px;
     }
   }
+}
+
+.main-tittle {
+  display: flex;
+  border: solid red;
+  font-size: 18px;
+  justify-content: space-evenly;
 }
 
 

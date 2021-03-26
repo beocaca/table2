@@ -5,7 +5,10 @@ import axios from "axios";
 var baseUrl = 'https://satlegal.ebitc.com/api'
 
 var list = []
+
 var avtDefault = 'https://ehoadonvnpt.vn/public/uploads/system/noavatar.gif'
+
+var countedItem = 0
 
 window.getGroup = async function getGroup(page = 1) {
   // history.pushState({id: page}, `sad`, `.?page=${page}`)
@@ -13,8 +16,9 @@ window.getGroup = async function getGroup(page = 1) {
   try {
     reset()
     var response = await axios.get(endPoint)
-    var countPages = Math.ceil(response.data.count / 20)
-    renderCountPage(countPages, page)
+    countedItem = (response.data.count)
+    renderCountItem(countedItem)
+    renderCountPageGroup(Math.ceil(countedItem / 20), page)
     addTitleGroup()
     addFieldGroup()
     list = [...response.data.results]
@@ -22,7 +26,9 @@ window.getGroup = async function getGroup(page = 1) {
       renderGroup(elm)
     })
     focusNext(addGroup)
-    console.log(list)
+    addBtn()
+
+    console.log(Math.ceil(countedItem / 20))
   } catch (e) {
 
   } finally {
@@ -33,22 +39,39 @@ window.getGroup = async function getGroup(page = 1) {
 function addFieldGroup() {
   var a = document.querySelector('#table')
   var html = `
-    <div class="user-item user-item-group">
+    <div class="user-item last-user-item user-item-group">
         <div class="user-line ">
           <div class="control-delete addField">
-            <div onclick="" class="count-number">
+            <div onclick="addGroup()" class="count-number">
             Add
             </div>
           </div>
         </div>
         <div class="user-line ">
-          <input data-0="name" class="input-user" type="text" onchange="addGroup()">
+          <input data-0="name" class="input-user" type="text">
         <div class="err-mess">
             <span err-0 ="name"></span>
         </div>
         </div>
       </div>
   `
+  a.insertAdjacentHTML('beforeend', html)
+}
+
+window.showAdd = function showAdd(e) {
+  var a = document.querySelector('#table')
+  a.classList.toggle('show-add-user')
+  var all = document.querySelectorAll('[data-0]:not([type="file"])')
+  all[0].focus()
+}
+
+function addBtn() {
+  var a = document.querySelector('#table')
+  var html = `
+        <div onclick="showAdd(1)" class="user-item add-item">
+            Add Nèw
+        </div>
+          `
   a.insertAdjacentHTML('beforeend', html)
 }
 
@@ -71,8 +94,7 @@ function addTitleGroup() {
 //href="http://localhost:1234/user.html?group=${elm.id}"
 
 function renderGroup(elm) {
-  var all = document.querySelectorAll('.user-item')
-  var a = all[all.length - 1]
+  var a = document.querySelector('.last-user-item')
   var html = `
       <div class="user-item user-item-group">
         <div class="user-line">
@@ -131,7 +153,6 @@ function getDataField(id = 0) {
   var allFieldElm = document.querySelectorAll(`[data-${id}]`)
   var jsonData = {}
   var formData = new FormData()
-
   allFieldElm.forEach(elm => {
     var fieldName = elm.getAttribute(`data-${id}`)
     var isFieldUpload = elm.files
@@ -141,7 +162,6 @@ function getDataField(id = 0) {
         jsonData[fieldName] = arrFiles[i]
         formData.append([fieldName], arrFiles[i])
       }
-
     } else {
       var fieldValue = elm.value
       jsonData[fieldName] = fieldValue
@@ -154,7 +174,55 @@ function getDataField(id = 0) {
   }
 }
 
-function renderCountPage(length, page) {
+function validateName(name) {
+  if (!name || !name.trim() || name.trim().length < 3 || name.trim().length > 15) {
+    return false
+  }
+  return true
+}
+
+function validateEmail(email) {
+  var re = /(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/
+  return re.test(String(email).toLowerCase());
+}
+
+
+function checkValue(id = 0) {
+  var checkArr = []
+  var all = document.querySelectorAll(`[data-${id}]:not([type="file"])`)
+  var allArr = Array.from(all)
+  allArr.forEach(elm => {
+    var name = elm.getAttribute(`data-${id}`)
+    elm.classList.remove('validate-box')
+    if (name === 'email') {
+      if (validateEmail(elm.value) === false) {
+        elm.classList.toggle('validate-box')
+        checkArr.push(false)
+      } else {
+        checkArr.push(true)
+      }
+    } else {
+      if (validateName(elm.value) === false) {
+        checkArr.push(false)
+        elm.classList.toggle('validate-box')
+      } else {
+        checkArr.push(true)
+      }
+    }
+  })
+  return checkArr
+}
+
+function renderCountItem(number) {
+  var a = document.querySelector('#count-item')
+  var html = `
+  <div class="">${number}</div>
+      `
+  a.innerHTML = html
+}
+
+
+function renderCountPageGroup(length, page) {
   var html = ''
   for (var i = 1; i <= length; i++) {
     var btnDiss = ''
@@ -209,29 +277,34 @@ function removeErr(id = 0) {
   })
 }
 
-function scrollTop() {
-  var a = document.querySelector('#table')
-  a.scrollTop = a.scrollHeight
+function scrollToView() {
+  var all = document.querySelectorAll('.user-item')
+  var a = all[all.length - 2]
+  a.scrollIntoView(true)
 }
 
 window.addGroup = async function addGroup() {
-  if (document.querySelector('[data-0]').value === "") {
-    return 0
-  }
-  var dataPost = getDataField()
-  var dataPostFormData = dataPost.formData
-  var endPoint = `${baseUrl}/dummies/groups/`
-  var newId = null
   try {
-    var response = await axios.post(endPoint, dataPostFormData)
-    var newGroup = response.data
-    list.push(newGroup)
-    renderGroup(newGroup)
-    newId = newGroup.id
-    clearField(0)
-    scrollTop()
-    console.log(list)
-    removeErr()
+    if (checkValue(0).every(x => x)) {
+      var endPoint = `${baseUrl}/dummies/groups/`
+      var dataPost = getDataField()
+      var dataPostFormData = dataPost.formData
+      var response = await axios.post(endPoint, dataPostFormData)
+      var newGroup = response.data
+      list.push(newGroup)
+      renderGroup(newGroup)
+      clearField(0)
+      scrollToView(0)
+      removeErr()
+      countedItem += 1
+      renderCountPageGroup(Math.ceil(countedItem / 20), 1)
+      renderCountItem(countedItem)
+      console.log(list)
+
+    } else {
+      alert('Wrong Validate Field')
+      return 0
+    }
   } catch (e) {
     if (e.response) {
       removeErr()
@@ -241,18 +314,26 @@ window.addGroup = async function addGroup() {
   }
 }
 
+
 window.delGroup = async function delGroup(id, e) {
   var endPoint = `${baseUrl}/dummies/groups/${id}/`
   try {
     e.target.parentNode.parentNode.parentNode.parentNode.parentNode.remove()
-    var response = await axios.delete(endPoint)
+    axios.delete(endPoint)
     var index = list.findIndex(e => {
       return e.id == `${id}`
     })
     list.splice(index, 1)
+    countedItem -= 1
+    renderCountItem(countedItem)
+    renderCountPageGroup(Math.ceil(countedItem / 20), 1)
     console.log(list)
   } catch (e) {
   }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 window.editGroup = async function editGroup(id, e) {
@@ -261,11 +342,20 @@ window.editGroup = async function editGroup(id, e) {
   var dataPost = getDataField(id)
   var dataPostFormData = dataPost.formData
   try {
-    var response = await axios.put(endPoint, dataPostFormData)
-    removeErr(id)
-    /*  var newGroup = response.data
-      initResponseEdit(newGroup, id)*/
-    console.log(response.data)
+    if (checkValue(id).every(x => x)) {
+      // show loading
+      var response = await axios.put(endPoint, dataPostFormData)
+      await sleep(2000);
+      alert(43434)
+      // hide loading
+      removeErr(id)
+      /*  var newGroup = response.data
+        initResponseEdit(newGroup, id)*/
+      console.log(response.data)
+    } else {
+      alert('Wrong Validate Field')
+      return 0
+    }
   } catch (e) {
     if (e.response) {
       var errors = e.response.data
@@ -279,9 +369,16 @@ window.editUser = async function editUser(id) {
   var dataPost = getDataField(id)
   var dataPostFormData = dataPost.formData
   try {
-    var response = await axios.put(endPoint, dataPostFormData)
-    removeErr(id)
-    console.log(response)
+    if (checkValue(id).every(x => x)) {
+      var response = await axios.put(endPoint, dataPostFormData)
+      removeErr(id)
+      console.log(response)
+    } else {
+      alert('Wrong Validate Field')
+
+      return 0
+    }
+
   } catch (e) {
     var a = (e.response.data)
     removeErr(id)
@@ -314,6 +411,7 @@ window.getUsers = async function getUsers(groupID, page = 1) {
   try {
     reset()
     var response = await axios.get(endPoint)
+    renderCountItem(response.data.count)
     var countPages = Math.ceil(response.data.count / 20)
     renderCountPageUser(countPages, page)
     listUser = [...response.data.results]
@@ -322,12 +420,10 @@ window.getUsers = async function getUsers(groupID, page = 1) {
     listUser.forEach(elm => {
       renderUsers(elm)
     })
-    // enterToAdd(addUser)
-    console.log(listUser)
     focusNext(addUser)
+    console.log(listUser)
+    addBtn()
   } catch (e) {
-
-  } finally {
 
   }
 }
@@ -336,12 +432,10 @@ window.getUsers = async function getUsers(groupID, page = 1) {
 
 
 function renderUsers(user) {
-  var all = document.querySelectorAll('.user-item')
-  var a = all[all.length - 1]
+  var a = document.querySelector('.last-user-item')
   if (user.avatar == null) {
     user.avatar = avtDefault
   }
-//http://localhost:1234/index.html
   var html = `
       <div class="user-item">
         <div class="user-line ">
@@ -369,7 +463,6 @@ function renderUsers(user) {
               <span err-${user.id}="first_name"> </span>
           </div>
         </div>
-
         <div class="user-line ">
           <input onchange="editUser(${user.id})" data-${user.id}="first_name" class="input-user" type="text"  value="${user.first_name}">
         <div class="err-mess">
@@ -420,7 +513,7 @@ function addTitleUser() {
 function addFieldUser() {
   var a = document.querySelector('#table')
   var html = `
-    <div class="user-item">
+    <div class="user-item last-user-item">
         <div class="user-line ">
           <div class="control-delete addField">
             <div  class="count-number" onclick="addUser(event)">
@@ -463,13 +556,17 @@ window.addUser = async function addUser() {
   var dataPost = getDataField()
   var dataPostFormData = dataPost.formData
   try {
-    var response = await axios.post(endPoint, dataPostFormData)
-    var newUser = response.data
-    renderUsers(newUser)
-    removeErr(0)
-    clearField()
-    console.log(response.data)
-    focusNext(addUser)
+    if (checkValue(0).every(x => x)) {
+      var response = await axios.post(endPoint, dataPostFormData)
+      var newUser = response.data
+      renderUsers(newUser)
+      removeErr(0)
+      clearField()
+    } else {
+      alert('Wrong Validate Field')
+
+      return 0
+    }
   } catch (e) {
     if (e.response) {
       removeErr(0)
@@ -509,20 +606,28 @@ window.focusNext = function focusNext(callback) {
 
   document.addEventListener('keyup', e => {
     var name = e.target.getAttribute('data-0')
-    var isEnter = e.keyCode === 13
+    var isEnter = e.keyCode == 13
 
-    for (var i = 0; i < arrName.length - 1; i++) {
-      if (isEnter && arrName[i] === name && !arrName.length - 1) {
+    for (var i = 0; i < arrName.length; i++) {
+      if (isEnter && arrName[i] == name && arrName[arrName.length - 1] != name) {
         document.querySelector(`[data-0="${arrName[i + 1]}"]`).focus()
-        console.log('123456798')
+        console.log('Namhuhu')
       }
     }
-    if (isEnter && arrName[arrName.length - 1] === name) {
+    if (isEnter && arrName[arrName.length - 1] == name) {
       callback()
       document.querySelector(`[data-0="${arrName[0]}"]`).focus()
     }
+  })
+}
+
+function focusNext2() {
+  var all = document.querySelectorAll('[data-0]:not([type="file"])')
+  all.forEach(elm => {
 
   })
+
+
 }
 
 
@@ -590,7 +695,7 @@ window.addEventListener('popstate', e => {
 ;
 
 // need a ";" before
-(_ => {
+(() => {
   let groupID = getIdGroup();
   if (groupID) {
     getUsers(groupID, undefined)
