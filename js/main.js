@@ -8,7 +8,9 @@ var list = []
 
 var avtDefault = 'https://ehoadonvnpt.vn/public/uploads/system/noavatar.gif'
 
-var countedItem = 0
+var countTotal = 0
+
+var countShow = 20
 
 var arrName = []
 
@@ -25,9 +27,8 @@ window.getGroup = async function getGroup(page = 1) {
   if (response) {
     reset()
     renderWrapGroup()
-    countedItem = (response.data.count)
-    renderCountItem(countedItem)
-    renderCountPageGroup(Math.ceil(countedItem / 20), page)
+    countTotal = (response.data.count)
+    renderCountItem(countShow, countTotal)
     addTitleGroup()
     addFieldGroup()
     list = [...response.data.results]
@@ -36,7 +37,11 @@ window.getGroup = async function getGroup(page = 1) {
     })
     focusNext(addGroup)
     addBtn()
-    console.log(response.data)
+    if (response.data.next) {
+      renderLoadMore(response.data.next)
+    } else {
+      document.querySelector('#count-page').classList.add('hidden--visually')
+    }
   }
 }
 
@@ -254,28 +259,45 @@ function checkValue(id = 0) {
   return checkArr
 }
 
-function renderCountItem(number) {
-  var a = document.querySelector('#count-item')
+function renderCountItem(show, total) {
+  var a = document.querySelector('[count-item]')
   var html = `
-  <div class="">${number}</div>
+  <div class="show-count">${show} / ${total}
+  </div>
       `
   a.innerHTML = html
 }
 
 
-function renderCountPageGroup(length, page) {
-  var html = ''
-  for (var i = 1; i <= length; i++) {
-    var btnDiss = ''
-
-    if (i === page) {
-      btnDiss = 'disabled'
-    }
-    html += `
-        <button ${btnDiss} onclick="getGroup(${i})"> Page ${i}</button>
-            `
-  }
+function renderLoadMore(endPoint) {
+  var html = `
+  <button class="btn-load" onclick=getNextPage("${endPoint}")> Load More </button>
+  `
   document.querySelector('#count-page').innerHTML = html
+}
+
+window.getNextPage = async function getNextPage(endPoint) {
+  var response = null
+  try {
+    response = await axios.get(endPoint)
+  } catch (e) {
+
+  }
+  if (response) {
+    var newList = response.data.results
+    list = [...list, ...newList]
+    newList.forEach(elm => {
+      renderGroup(elm)
+    })
+    countShow += 20
+    countShow = list.length
+    renderCountItem(countShow, countTotal)
+    if (response.data.next) {
+      renderLoadMore(response.data.next)
+    } else {
+      document.querySelector('#count-page').classList.add('hidden--visually')
+    }
+  }
 }
 
 function renderCountPageUser(length, page) {
@@ -353,41 +375,15 @@ window.addGroup = async function addGroup() {
       clearField(0)
       scrollToView(0)
       removeErr()
-      countedItem += 1
-      renderCountItem(countedItem)
+      countTotal += 1
+      countShow += 1
+      renderCountItem(countShow, countTotal)
       console.log(list)
     }
   } else {
     return 0
   }
 }
-/*
-
-var selector = "asdf"
-var el;
-
-selector = "";
-
-// cach 1
-try {
-  var el = document.querySelector(selector);
-} catch (e) {
-  alert("Invalid element")
-}
-
-if (el) {
-  //
-}
-
-
-// cach 2
-if (typeof selector != "string" || !selector.trim().length) {
-  alert("Invalid element")
-} else {
-  var el = document.querySelector(selector);
-
-
-*/
 
 window.delGroup = async function delGroup(id, e) {
   var endPoint = `${baseUrl}/dummies/groups/${id}/`
@@ -403,9 +399,9 @@ window.delGroup = async function delGroup(id, e) {
       return e.id == `${id}`
     })
     list.splice(index, 1)
-    countedItem -= 1
-    renderCountItem(countedItem)
-    renderCountPageGroup(Math.ceil(countedItem / 20), 1)
+    countTotal -= 1
+    countShow -= 1
+    renderCountItem(countShow, countTotal)
     console.log(list)
   }
 }
@@ -470,19 +466,6 @@ window.showDelete = function showDelete(event) {
   event.target.parentElement.classList.toggle('show')
 }
 
-function enterToAdd(callback) {
-  var all = document.querySelectorAll('[data-0]')
-  all.forEach(a => {
-    a.addEventListener("keyup", e => {
-      if (e.isComposing || e.keyCode === 13) {
-        callback()
-        console.log('Nam Enter')
-      }
-    });
-  })
-
-}
-
 var listUser = []
 
 window.getUsers = async function getUsers(groupID, page = 1) {
@@ -496,10 +479,8 @@ window.getUsers = async function getUsers(groupID, page = 1) {
   }
   if (response) {
     renderWrapGroup()
-    console.log(response.data.count)
-    countedItem = response.data.count
-    renderCountItem(countedItem)
-    renderCountPageUser(Math.ceil(countedItem / 20), page)
+    countTotal = response.data.count
+    renderCountPageUser(Math.ceil(countTotal / 20), page)
     listUser = [...response.data.results]
     addTitleUser()
     addFieldUser()
@@ -507,8 +488,9 @@ window.getUsers = async function getUsers(groupID, page = 1) {
       renderUsers(elm)
     })
     focusNext(addUser)
-    console.log(listUser)
     addBtn()
+    renderCountItem(listUser.length, countTotal)
+    console.log(listUser)
   }
 }
 
@@ -703,9 +685,9 @@ window.addUser = async function addUser() {
     }
     if (response) {
       var newUser = response.data
-      countedItem += 1
+      countTotal += 1
       listUser.push(newUser)
-      renderCountItem(countedItem)
+      renderCountItem(countTotal)
       renderUsers(newUser)
       clearField()
       console.log(listUser)
@@ -749,16 +731,14 @@ window.delUser = async function delUser(id, e) {
     console.log(e)
   }
   if (response) {
-    countedItem -= 1
-    renderCountItem(countedItem)
+    countTotal -= 1
+    renderCountItem(countTotal)
     e.target.parentElement.parentNode.parentNode.parentNode.parentNode.remove()
     var a = listUser.findIndex(elm => elm.id == id)
     listUser.splice(a, 1)
     console.log(listUser)
   }
 }
-
-var kFocus = null
 
 window.focusNext = function focusNext(callback) {
   var all = document.querySelectorAll('[data-0]:not([type="file"])')
@@ -786,37 +766,6 @@ document.addEventListener('keyup', e => {
   }
 )
 
-/*
-for (var i = 0; i < arrName.length; i++) {
-  if (isEnter && arrName[i] == name && arrName[arrName.length - 1] != name) {
-    document.querySelector(`[data-0="${arrName[i + 1]}"]`).focus()
-  }
-}
-if (isEnter && arrName[arrName.length - 1] == name) {
-  callBackFocus()
-}
-*/
-
-/*
-for (var i = 0; i < arrName.length; i++) {
-  if (isEnter && name === arrName[i] && name === arrName[arrName.length - 1]) {
-    document.querySelector(`[data-0="${arrName[0]}"]`).focus()
-    callBackFocus()
-  } else if (isEnter && name === arrName[i]) {
-    document.querySelector(`[data-0="${arrName[i + 1]}"]`).focus()
-  } else {
-  }
-}
-*/
-
-function initFormValue(item) {
-  var all = document.querySelectorAll(`[data-name]`)
-  all.forEach(elm => {
-    var fieldName = elm.getAttribute('data-name')
-    elm.value = item[fieldName]
-  })
-}
-
 function reset() {
   document.querySelector('#table').innerHTML = ''
 }
@@ -833,8 +782,8 @@ function renderWrapGroup() {
           <div class="status-method"> Doing</div>
         </div>
         <div class="status-right">
-          <div class="count-item" id="count-item">
-            3
+          <div count-item class="count-item"  >
+
           </div>
         </div>
       </div>
