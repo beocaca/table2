@@ -714,7 +714,7 @@ window.addUser = async function addUser() {
     return 0
   }
 }
-
+//console
 window.initResponseEdit = function initResponseEdit(newItem, id) {
   var all = document.querySelectorAll(`[data-${id}]`)
   all.forEach(elm => {
