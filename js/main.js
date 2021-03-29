@@ -37,6 +37,7 @@ window.getGroup = async function getGroup(page = 1) {
     })
     focusNext(addGroup)
     addBtn()
+    console.log(list.length)
     if (response.data.next) {
       renderLoadMore(response.data.next)
     } else {
@@ -285,13 +286,14 @@ window.getNextPage = async function getNextPage(endPoint) {
   }
   if (response) {
     var newList = response.data.results
-    list = [...list, ...newList]
     newList.forEach(elm => {
+      list.push(elm)
       renderGroup(elm)
     })
-    countShow += 20
-    countShow = list.length
+    countTotal = response.data.count
+    countShow = countShow + newList.length
     renderCountItem(countShow, countTotal)
+    console.log(list.length)
     if (response.data.next) {
       renderLoadMore(response.data.next)
     } else {
@@ -377,7 +379,7 @@ window.addGroup = async function addGroup() {
       removeErr()
       countTotal += 1
       countShow += 1
-      renderCountItem(countShow, countTotal)
+      renderCountItem(list.length, countTotal)
       console.log(list)
     }
   } else {
@@ -401,8 +403,8 @@ window.delGroup = async function delGroup(id, e) {
     list.splice(index, 1)
     countTotal -= 1
     countShow -= 1
-    renderCountItem(countShow, countTotal)
-    console.log(list)
+    renderCountItem(list.length, countTotal)
+    console.log(list.length)
   }
 }
 
@@ -428,8 +430,12 @@ window.editGroup = async function editGroup(id, e) {
       apiRun(id, false)
     }
     if (response) {
+      var a = list.findIndex(elm => {
+        return elm.id === id
+      })
+      list[a] = response.data
       removeErr(id)
-      console.log(response.data)
+      console.log(list)
     }
   } else {
     return 0
@@ -490,7 +496,7 @@ window.getUsers = async function getUsers(groupID, page = 1) {
     focusNext(addUser)
     addBtn()
     renderCountItem(listUser.length, countTotal)
-    console.log(listUser)
+    console.log(list.length)
   }
 }
 
