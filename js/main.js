@@ -10,12 +10,21 @@ var avtDefault = 'https://ehoadonvnpt.vn/public/uploads/system/noavatar.gif'
 
 var countedItem = 0
 
+var arrName = []
+
+var callBackFocus = null
+
 window.getGroup = async function getGroup(page = 1) {
-  // history.pushState({id: page}, `sad`, `.?page=${page}`)
   var endPoint = `${baseUrl}/dummies/groups/?page=${page}`
+  var response = null
   try {
+    response = await axios.get(endPoint)
+  } catch (e) {
+    console.log(e.response)
+  }
+  if (response) {
     reset()
-    var response = await axios.get(endPoint)
+    renderWrapGroup()
     countedItem = (response.data.count)
     renderCountItem(countedItem)
     renderCountPageGroup(Math.ceil(countedItem / 20), page)
@@ -28,10 +37,6 @@ window.getGroup = async function getGroup(page = 1) {
     focusNext(addGroup)
     addBtn()
     console.log(response.data)
-  } catch (e) {
-
-  } finally {
-
   }
 }
 
@@ -48,27 +53,36 @@ function addFieldGroup() {
         </div>
         <div class="user-line ">
           <input data-0="name" class="input-user" type="text">
-        <div class="err-mess">
-            <span err-0 ="name"></span>
-        </div>
+          <div loading-0="name" class="user-load hidden--visually">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" alt="">
+          </div>
+          <div valid-0="name" class="valid hidden--visually">
+            <img src="https://image.flaticon.com/icons/png/512/2831/2831577.png" alt="">
+            <div class="valid-tip">
+             <div class="err-mess">
+              <span err-0="name"> Lorem ipsum dolor sit amet.</span>
+             </div>
+            </div>
+          </div>
         </div>
       </div>
   `
   a.insertAdjacentHTML('beforeend', html)
 }
 
-window.showAdd = function showAdd(e) {
+window.showAdd = function showAdd() {
   var a = document.querySelector('#table')
   a.classList.toggle('show-add-user')
   var all = document.querySelectorAll('[data-0]:not([type="file"])')
   all[0].focus()
+  event.target.classList.toggle('add-item-show')
 }
 
 function addBtn() {
   var a = document.querySelector('#table')
   var html = `
-        <div onclick="showAdd(1)" class="user-item add-item">
-            Add Nèw
+        <div onclick="showAdd()" class="user-item add-item">
+            Add Field
         </div>
           `
   a.insertAdjacentHTML('beforeend', html)
@@ -115,8 +129,16 @@ function renderGroup(elm) {
         </div>
         <div class="user-line">
           <input class="input-user" type="text" value="${elm.name}" data-${elm.id}="name"  onchange="editGroup(${elm.id},event)">
-          <div class="err-mess">
-            <span err-${elm.id}="name"></span>
+          <div loading-${elm.id}="name" class="hidden--visually user-load">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" alt="">
+          </div>
+          <div valid-${elm.id}="name" class="valid hidden--visually">
+            <img src="https://image.flaticon.com/icons/png/512/2831/2831577.png" alt="">
+            <div class="valid-tip">
+             <div class="err-mess">
+              <span err-${elm.id}="name"> Lorem ipsum dolor sit amet.</span>
+             </div>
+            </div>
           </div>
         </div>
       </div>
@@ -185,10 +207,12 @@ function validateEmail(email) {
   return re.test(String(email).toLowerCase());
 }
 
-function addTextErr(id) {
-  document.querySelector(`[err-${id}]`).textContent = 'sai Field'
+function showValid(id) {
+  document.querySelectorAll(`[valid-${id}]`)
+    .forEach(elm => {
+      elm.classList.remove('hidden-visually')
+    })
 }
-
 
 function checkValue(id = 0) {
   var checkArr = []
@@ -202,17 +226,27 @@ function checkValue(id = 0) {
     if (x === 'email') {
       if (validateEmail(elm.value) === false) {
         elm.classList.toggle('validate-box')
+        document.querySelector(`[err-${id}=${x}]`)
+          .textContent = 'Type Email NOT Correct'
+        document.querySelector(`[valid-${id}=${x}]`)
+          .classList.remove('hidden--visually')
         checkArr.push(false)
-        document.querySelector(`[err-${id}='email']`).textContent = 'Type Email NOT Correct'
       } else {
+        document.querySelector(`[valid-${id}=${x}]`)
+          .classList.add('hidden--visually')
         checkArr.push(true)
       }
     } else {
       if (validateName(elm.value) === false) {
-        checkArr.push(false)
         elm.classList.toggle('validate-box')
-        document.querySelector(`[err-${id}=${x}]`).textContent = '3 -> 15 Chars Please'
+        document.querySelector(`[err-${id}=${x}]`)
+          .textContent = '3 -> 15 Chars Please'
+        document.querySelector(`[valid-${id}=${x}]`)
+          .classList.remove('hidden--visually')
+        checkArr.push(false)
       } else {
+        document.querySelector(`[valid-${id}=${x}]`)
+          .classList.add('hidden--visually')
         checkArr.push(true)
       }
     }
@@ -272,7 +306,12 @@ function renderError(id = 0, errors) {
   errKeys.forEach(k => {
     var arrMess = errors[k]
     var mess = arrMess.join()
-    document.querySelector(`[err-${id} = "${k}"]`).textContent = mess
+    document.querySelector(`[err-${id} = "${k}"]`)
+      .textContent = mess
+    document.querySelector(`[valid-${id} = "${k}"]`)
+      .classList.remove('hidden--visually')
+    document.querySelector(`[data-${id} = "${k}"]`)
+      .classList.add('validate-box')
   })
 }
 
@@ -290,13 +329,24 @@ function scrollToView() {
 }
 
 window.addGroup = async function addGroup() {
-  try {
-    if (checkValue(0).every(x => x)) {
-      var endPoint = `${baseUrl}/dummies/groups/`
-      var dataPost = getDataField()
-      var dataPostFormData = dataPost.formData
-      apiRun(0, true)
-      var response = await axios.post(endPoint, dataPostFormData)
+  if (checkValue(0).every(x => x)) {
+    var response = null
+    var endPoint = `${baseUrl}/dummies/groups/`
+    var dataPost = getDataField()
+    var dataPostFormData = dataPost.formData
+    apiRun(0, true)
+    try {
+      response = await axios.post(endPoint, dataPostFormData)
+    } catch (e) {
+      if (e.response) {
+        removeErr()
+        var errors = e.response.data
+        renderError(0, errors)
+      }
+    } finally {
+      apiRun(0, false)
+    }
+    if (response) {
       var newGroup = response.data
       list.push(newGroup)
       renderGroup(newGroup)
@@ -304,29 +354,51 @@ window.addGroup = async function addGroup() {
       scrollToView(0)
       removeErr()
       countedItem += 1
-      renderCountPageGroup(Math.ceil(countedItem / 20), 1)
       renderCountItem(countedItem)
       console.log(list)
-    } else {
-      return 0
     }
-  } catch (e) {
-    if (e.response) {
-      removeErr()
-      var errors = e.response.data
-      renderError(0, errors)
-    }
-  } finally {
-    apiRun(0, false)
+  } else {
+    return 0
   }
+}
+/*
+
+var selector = "asdf"
+var el;
+
+selector = "";
+
+// cach 1
+try {
+  var el = document.querySelector(selector);
+} catch (e) {
+  alert("Invalid element")
+}
+
+if (el) {
+  //
 }
 
 
+// cach 2
+if (typeof selector != "string" || !selector.trim().length) {
+  alert("Invalid element")
+} else {
+  var el = document.querySelector(selector);
+
+
+*/
+
 window.delGroup = async function delGroup(id, e) {
   var endPoint = `${baseUrl}/dummies/groups/${id}/`
+  var response = null
   try {
+    response = axios.delete(endPoint)
+  } catch (e) {
+    console.log(e)
+  }
+  if (response) {
     e.target.parentNode.parentNode.parentNode.parentNode.parentNode.remove()
-    axios.delete(endPoint)
     var index = list.findIndex(e => {
       return e.id == `${id}`
     })
@@ -335,7 +407,6 @@ window.delGroup = async function delGroup(id, e) {
     renderCountItem(countedItem)
     renderCountPageGroup(Math.ceil(countedItem / 20), 1)
     console.log(list)
-  } catch (e) {
   }
 }
 
@@ -344,56 +415,54 @@ function sleep(ms) {
 }
 
 window.editGroup = async function editGroup(id, e) {
-  var endPoint = `${baseUrl}/dummies/groups/${id}/`
-  // var value = e.target.value
-  var dataPost = getDataField(id)
-  var dataPostFormData = dataPost.formData
-  try {
-    if (checkValue(id).every(x => x)) {
-      // show loading
-      apiRun(id, true)
-      var response = await axios.put(endPoint, dataPostFormData)
-      // hide loading
+  if (checkValue(id).every(x => x)) {
+    var endPoint = `${baseUrl}/dummies/groups/${id}/`
+    var dataPost = getDataField(id)
+    var dataPostFormData = dataPost.formData
+    var response = null
+    apiRun(id, true)
+    try {
+      response = await axios.put(endPoint, dataPostFormData)
+    } catch (e) {
+      if (e.response) {
+        var errors = e.response.data
+        renderError(id, errors)
+      }
+    } finally {
+      apiRun(id, false)
+    }
+    if (response) {
       removeErr(id)
-      /*  var newGroup = response.data
-        initResponseEdit(newGroup, id)*/
       console.log(response.data)
-    } else {
-      return 0
     }
-  } catch (e) {
-    if (e.response) {
-      var errors = e.response.data
-      renderError(id, errors)
-    }
-  } finally {
-    apiRun(id, false)
-
+  } else {
+    return 0
   }
 }
 
 window.editUser = async function editUser(id) {
-  var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/${id}/`
-  var dataPost = getDataField(id)
-  var dataPostFormData = dataPost.formData
-  try {
-    if (checkValue(id).every(x => x)) {
-      apiRun(id, true)
-
-      var response = await axios.put(endPoint, dataPostFormData)
-      removeErr(id)
-      console.log(response)
-    } else {
-      return 0
-    }
-
-  } catch (e) {
-    var a = (e.response.data)
+  if (checkValue(id).every(x => x)) {
+    var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/${id}/`
+    var dataPost = getDataField(id)
+    var dataPostFormData = dataPost.formData
+    var response = null
+    apiRun(id, true)
     removeErr(id)
-    renderError(id, a)
-  } finally {
-    apiRun(id, false)
+    try {
+      response = await axios.put(endPoint, dataPostFormData)
+    } catch (e) {
+      var a = (e.response.data)
+      renderError(id, a)
+    } finally {
+      apiRun(id, false)
+    }
+    if (response) {
+      console.log(response.data)
+    }
+  } else {
+    return 0
   }
+
 }
 
 
@@ -418,9 +487,16 @@ var listUser = []
 
 window.getUsers = async function getUsers(groupID, page = 1) {
   var endPoint = `${baseUrl}/dummies/groups/${groupID}/users/?page=${page}`
+  var response = null
+  reset()
   try {
-    reset()
-    var response = await axios.get(endPoint)
+    response = await axios.get(endPoint)
+  } catch (e) {
+
+  }
+  if (response) {
+    renderWrapGroup()
+    console.log(response.data.count)
     countedItem = response.data.count
     renderCountItem(countedItem)
     renderCountPageUser(Math.ceil(countedItem / 20), page)
@@ -433,8 +509,6 @@ window.getUsers = async function getUsers(groupID, page = 1) {
     focusNext(addUser)
     console.log(listUser)
     addBtn()
-  } catch (e) {
-
   }
 }
 
@@ -470,25 +544,49 @@ function renderUsers(user) {
           <input multiple accept="image/*" onchange="editUser(${user.id}),changeFileUpload(event)" data-${user.id}="avatar" class="input-user" type="file" value="${user.avatar}">
           <img src="${user.avatar}">
           <div class="err-mess">
-              <span err-${user.id}="first_name"> </span>
+              <span err-${user.id}="avatar"> </span>
           </div>
         </div>
         <div class="user-line ">
           <input onchange="editUser(${user.id})" data-${user.id}="first_name" class="input-user" type="text"  value="${user.first_name}">
-        <div class="err-mess">
-        <span err-${user.id}="first_name"> </span>
-        </div>
+          <div loading-${user.id}="first_name" class="hidden--visually user-load">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" alt="">
+          </div>
+          <div valid-${user.id}="first_name" class="valid hidden--visually">
+            <img src="https://image.flaticon.com/icons/png/512/2831/2831577.png" alt="">
+            <div class="valid-tip">
+             <div class="err-mess">
+              <span err-${user.id}="first_name"> Lorem ipsum dolor sit amet.</span>
+             </div>
+            </div>
+          </div>
         </div>
         <div class="user-line ">
           <input onchange="editUser(${user.id})" data-${user.id}="last_name" class="input-user" type="text"  value="${user.last_name}">
-          <div class="err-mess">
-            <span err-${user.id}="last_name"></span>
+          <div loading-${user.id}="last_name" class="hidden--visually user-load">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" alt="">
+          </div>
+          <div valid-${user.id}="last_name" class="valid hidden--visually">
+            <img src="https://image.flaticon.com/icons/png/512/2831/2831577.png" alt="">
+            <div class="valid-tip">
+             <div class="err-mess">
+              <span err-${user.id}="last_name"> Lorem ipsum dolor sit amet.</span>
+             </div>
+            </div>
           </div>
         </div>
         <div class="user-line ">
           <input onchange="editUser(${user.id})" data-${user.id}="email" class="input-user" type="text"  value="${user.email}">
-          <div class="err-mess">
-         <span err-${user.id}="email"></span>
+          <div loading-${user.id}="email" class="hidden--visually user-load">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" alt="">
+          </div>
+          <div valid-${user.id}="email" class="valid hidden--visually">
+            <img src="https://image.flaticon.com/icons/png/512/2831/2831577.png" alt="">
+            <div class="valid-tip">
+             <div class="err-mess">
+              <span err-${user.id}="email"> Lorem ipsum dolor sit amet.</span>
+             </div>
+            </div>
           </div>
         </div>
       </div>
@@ -540,21 +638,45 @@ function addFieldUser() {
         </div>
         <div class="user-line ">
           <input class="input-user" type="text" data-0='first_name' >
-            <div class="err-mess">
-                <span err-0 ="first_name"></span>
+                    <div loading-0="first_name" class="hidden--visually user-load">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" alt="">
+          </div>
+          <div valid-${0}="first_name" class="valid hidden--visually">
+            <img src="https://image.flaticon.com/icons/png/512/2831/2831577.png" alt="">
+            <div class="valid-tip">
+             <div class="err-mess">
+              <span err-${0}="first_name"> Lorem ipsum dolor sit amet.</span>
              </div>
+            </div>
+          </div>
         </div>
         <div class="user-line ">
           <input class="input-user" type="text" data-0='last_name' >
-            <div class="err-mess">
-                <span err-0 ="last_name"></span>
+         <div loading-0="last_name" class="hidden--visually user-load">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" alt="">
+          </div>
+          <div valid-${0}="last_name" class="valid hidden--visually">
+            <img src="https://image.flaticon.com/icons/png/512/2831/2831577.png" alt="">
+            <div class="valid-tip">
+             <div class="err-mess">
+              <span err-${0}="last_name"> Lorem ipsum dolor sit amet.</span>
              </div>
+            </div>
+          </div>
         </div>
         <div class="user-line ">
           <input class="input-user" type="text" data-0='email' >
-            <div class="err-mess">
-                 <span err-0 ="email"></span>
+          <div loading-0="email" class="hidden--visually user-load">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" alt="">
+          </div>
+          <div valid-${0}="email" class="valid hidden--visually">
+            <img src="https://image.flaticon.com/icons/png/512/2831/2831577.png" alt="">
+            <div class="valid-tip">
+             <div class="err-mess">
+              <span err-${0}="email"> Lorem ipsum dolor sit amet.</span>
              </div>
+            </div>
+          </div>
         </div>
       </div>
   `
@@ -562,31 +684,34 @@ function addFieldUser() {
 }
 
 window.addUser = async function addUser() {
-  var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/`
-  var dataPost = getDataField()
-  var dataPostFormData = dataPost.formData
-  try {
-    if (checkValue(0).every(x => x)) {
-      apiRun(0, true)
-      var response = await axios.post(endPoint, dataPostFormData)
+  if (checkValue(0).every(x => x)) {
+    var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/`
+    var dataPost = getDataField()
+    var dataPostFormData = dataPost.formData
+    apiRun(0, true)
+    var response = null
+    removeErr(0)
+    try {
+      response = await axios.post(endPoint, dataPostFormData)
+    } catch (e) {
+      if (e.response) {
+        var errors = e.response.data
+        renderError(0, errors)
+      }
+    } finally {
+      apiRun(0, false)
+    }
+    if (response) {
       var newUser = response.data
-      countedItem+=1
+      countedItem += 1
+      listUser.push(newUser)
       renderCountItem(countedItem)
-      renderCountPageUser(Math.ceil(countedItem / 20), 1)
       renderUsers(newUser)
-      removeErr(0)
       clearField()
-    } else {
-      return 0
+      console.log(listUser)
     }
-  } catch (e) {
-    if (e.response) {
-      removeErr(0)
-      var errors = e.response.data
-      renderError(0, errors)
-    }
-  } finally {
-    apiRun(0, false)
+  } else {
+    return 0
   }
 }
 
@@ -603,52 +728,86 @@ function apiRun(id = 0, trueFasle) {
   if (!trueFasle) {
     a = 'removeAttribute'
   }
-  var all = document.querySelectorAll(`[data-${id}]:not([type="file"])`)
-  all.forEach(elm => {
+  var allInput = document.querySelectorAll(`[data-${id}]:not([type="file"])`)
+  allInput.forEach(elm => {
     elm[`${a}`]('disabled', '')
-    all[0].focus()
+    allInput[0].focus()
+  })
+  var allLoadImg = document.querySelectorAll(`[loading-${id}]`)
+  allLoadImg.forEach(elm => {
+    elm.classList.toggle('hidden--visually')
   })
 }
 
 
 window.delUser = async function delUser(id, e) {
   var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/${id}/`
+  var response = null
   try {
-    countedItem-=1
-    renderCountItem(countedItem)
-    renderCountPageUser(Math.ceil(countedItem / 20), 1)
-    var index = listUser.findIndex(e => e.id == id)
-    list.splice(index, 1)
-    var response = await axios.delete(endPoint)
-    e.target.parentElement.parentNode.parentNode.parentNode.parentNode.remove()
-    console.log(e)
+    response = await axios.delete(endPoint)
   } catch (e) {
+    console.log(e)
+  }
+  if (response) {
+    countedItem -= 1
+    renderCountItem(countedItem)
+    e.target.parentElement.parentNode.parentNode.parentNode.parentNode.remove()
+    var a = listUser.findIndex(elm => elm.id == id)
+    listUser.splice(a, 1)
+    console.log(listUser)
   }
 }
 
+var kFocus = null
+
 window.focusNext = function focusNext(callback) {
-  var arrName = []
   var all = document.querySelectorAll('[data-0]:not([type="file"])')
-  all.forEach(input => {
+  var allArr = Array.from(all)
+  allArr.forEach(input => {
     var name = input.getAttribute('data-0')
     arrName.push(name)
   })
+  callBackFocus = callback
+}
 
-  document.addEventListener('keyup', e => {
+document.addEventListener('keyup', e => {
+    var all = document.querySelectorAll('[data-0]:not([type="file"])')
     var name = e.target.getAttribute('data-0')
     var isEnter = e.keyCode == 13
-
     for (var i = 0; i < arrName.length; i++) {
       if (isEnter && arrName[i] == name && arrName[arrName.length - 1] != name) {
         document.querySelector(`[data-0="${arrName[i + 1]}"]`).focus()
-        console.log('Namhuhu')
       }
     }
     if (isEnter && arrName[arrName.length - 1] == name) {
-      callback()
+      all[0].focus()
+      callBackFocus()
     }
-  })
+  }
+)
+
+/*
+for (var i = 0; i < arrName.length; i++) {
+  if (isEnter && arrName[i] == name && arrName[arrName.length - 1] != name) {
+    document.querySelector(`[data-0="${arrName[i + 1]}"]`).focus()
+  }
 }
+if (isEnter && arrName[arrName.length - 1] == name) {
+  callBackFocus()
+}
+*/
+
+/*
+for (var i = 0; i < arrName.length; i++) {
+  if (isEnter && name === arrName[i] && name === arrName[arrName.length - 1]) {
+    document.querySelector(`[data-0="${arrName[0]}"]`).focus()
+    callBackFocus()
+  } else if (isEnter && name === arrName[i]) {
+    document.querySelector(`[data-0="${arrName[i + 1]}"]`).focus()
+  } else {
+  }
+}
+*/
 
 function initFormValue(item) {
   var all = document.querySelectorAll(`[data-name]`)
@@ -660,6 +819,35 @@ function initFormValue(item) {
 
 function reset() {
   document.querySelector('#table').innerHTML = ''
+}
+
+function renderWrapGroup() {
+  var a = document.querySelector('#status')
+  var html = `
+      <div class="status">
+        <div class="status-left">
+          <div onclick="showTable(event)" class="status-arrow">
+
+          </div>
+          <div class="status-text"> Status</div>
+          <div class="status-method"> Doing</div>
+        </div>
+        <div class="status-right">
+          <div class="count-item" id="count-item">
+            3
+          </div>
+        </div>
+      </div>
+      `
+  a.innerHTML = html
+}
+
+window.showTable = function showTable(e) {
+  var a = document.querySelector('#table')
+  a.classList.toggle('hidden--visually')
+  e.target.classList.toggle('status-arrow-rotate')
+  var x = document.querySelector('#status')
+  x.classList.toggle('status-50')
 }
 
 
@@ -696,10 +884,9 @@ window.addEventListener('popstate', e => {
   }
 })
 
+
 // history.replaceState({id: null}, `Default`, `./`)
-
 ;
-
 // need a ";" before
 (() => {
   let groupID = getIdGroup();
