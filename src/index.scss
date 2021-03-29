@@ -159,10 +159,11 @@
   height: 36px;
 
   &.add-item {
-    &.add-item-show{
+    &.add-item-show {
       opacity: 0.5;
       color: black;
     }
+
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -253,6 +254,7 @@
       border: none;
       font-size: 18px;
       padding-left: 10px;
+      padding-right: 36px;
       display: inline-block;
       background-color: transparent;
 
@@ -263,8 +265,8 @@
 
       &.validate-box {
         font-weight: bold;
-        background-color: lightyellow;
-        border: solid 1px palevioletred;
+        background-color: #fafaef;
+        border: solid 1px #7b68ee;
       }
     }
 
@@ -373,16 +375,17 @@
     display: none;
 
     .err-mess {
-      padding: 5px;
+      text-align: center;
+      font-weight: lighter;
+      padding: 3px;
       border-radius: 5px;
       bottom: 50%;
-      right: 100%;
+      right: 80%;
       width: 150px;
-      font-weight: bold;
-      font-style: italic;
       position: absolute;
       font-size: 12px;
-      background-color: #dddddd;
+      background-color: #555555;
+      color: white;
     }
   }
 }

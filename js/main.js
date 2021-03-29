@@ -227,7 +227,7 @@ function checkValue(id = 0) {
       if (validateEmail(elm.value) === false) {
         elm.classList.toggle('validate-box')
         document.querySelector(`[err-${id}=${x}]`)
-          .textContent = 'Type Email NOT Correct'
+          .textContent = 'Invalid email address'
         document.querySelector(`[valid-${id}=${x}]`)
           .classList.remove('hidden--visually')
         checkArr.push(false)
@@ -240,7 +240,7 @@ function checkValue(id = 0) {
       if (validateName(elm.value) === false) {
         elm.classList.toggle('validate-box')
         document.querySelector(`[err-${id}=${x}]`)
-          .textContent = '3 -> 15 Chars Please'
+          .textContent = 'Must be between 3 and 15 characters'
         document.querySelector(`[valid-${id}=${x}]`)
           .classList.remove('hidden--visually')
         checkArr.push(false)
