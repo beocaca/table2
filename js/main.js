@@ -4,20 +4,18 @@ import axios from "axios";
 
 var baseUrl = 'https://satlegal.ebitc.com/api'
 
-var list = []
-
+// window.listPages = [];
+var listPages = []
+window.listPages = listPages
 var avtDefault = 'https://ehoadonvnpt.vn/public/uploads/system/noavatar.gif'
-
 var countTotal = 0
-
-var countShow = 20
-
+var countItemRemove = 0
+var countShow = 0
 var arrName = []
-
 var callBackFocus = null
-
+var pageToLoad = 1
 window.getGroup = async function getGroup(page = 1) {
-  var endPoint = `${baseUrl}/dummies/groups/?page=${page}`
+  var endPoint = `${baseUrl}/dummies/groups/?page=${page}&ungroup=true`
   var response = null
   try {
     response = await axios.get(endPoint)
@@ -28,18 +26,20 @@ window.getGroup = async function getGroup(page = 1) {
     reset()
     renderWrapGroup()
     countTotal = (response.data.count)
-    renderCountItem(countShow, countTotal)
     addTitleGroup()
     addFieldGroup()
-    list = [...response.data.results]
-    list.forEach(elm => {
+    // listPages = [...response.data.results]
+    listPages.push.apply(listPages, response.data.results)
+    listPages.forEach(elm => {
       renderGroup(elm)
     })
     focusNext(addGroup)
     addBtn()
-    console.log(list.length)
+    renderCountItem(document.querySelectorAll('[line-user]').length, countTotal)
+    console.log(listPages)
     if (response.data.next) {
-      renderLoadMore(response.data.next)
+      pageToLoad += 1
+      renderLoadMore(pageToLoad)
     } else {
       document.querySelector('#count-page').classList.add('hidden--visually')
     }
@@ -87,7 +87,7 @@ window.showAdd = function showAdd() {
 function addBtn() {
   var a = document.querySelector('#table')
   var html = `
-        <div onclick="showAdd()" class="user-item add-item">
+        <div class="user-item add-item" onclick="showAdd()" >
             Add Field
         </div>
           `
@@ -97,7 +97,7 @@ function addBtn() {
 function addTitleGroup() {
   var a = document.querySelector('#table')
   var html = `
-        <div class="user-item user-item-group">
+        <div class="user-item first-user-item user-item-group">
 
         <div class="user-line user-tittle">
           Id
@@ -115,7 +115,7 @@ function addTitleGroup() {
 function renderGroup(elm) {
   var a = document.querySelector('.last-user-item')
   var html = `
-      <div class="user-item user-item-group">
+      <div line-user="${elm.id}" class="user-item user-item-group">
         <div class="user-line">
           <div class="control-delete">
             <div class="count-number">
@@ -270,37 +270,68 @@ function renderCountItem(show, total) {
 }
 
 
-function renderLoadMore(endPoint) {
+function renderLoadMore(page) {
+  var endPoint = `${baseUrl}/dummies/groups/?page=${page}`
   var html = `
-  <button class="btn-load" onclick=getNextPage("${endPoint}")> Load More </button>
+  <button class="btn-load" onclick=getNextPage(${page})> Load More </button>
   `
   document.querySelector('#count-page').innerHTML = html
 }
 
-window.getNextPage = async function getNextPage(endPoint) {
-  var response = null
-  try {
-    response = await axios.get(endPoint)
-  } catch (e) {
+var i = 0
 
+function getUniqueListBy(arr, key) {
+  return [...new Map(arr.map(item => [item[key], item])).values()];
+}
+
+window.getNextPage = async function getNextPage(page) {
+  var listReq = []
+  var newListPages = []
+  for (var i = 1; i <= page; i++) {
+    try {
+      listReq.push(await axios.get(`https://satlegal.ebitc.com/api/dummies/groups/?page=${i}&ungroup=true`))
+    } catch (e) {
+    }
   }
+  listReq.forEach(elm => {
+    newListPages.push.apply(newListPages, elm.data.results)
+  })
+
+  newListPages.forEach((elm, ind, arr) => {
+    var a = document.querySelector(`[line-user = "${elm.id}"]`)
+    console.log(a)
+    if (!a) {
+      renderGroup(elm)
+    }
+  })
+  renderCountItem(document.querySelectorAll('[line-user]').length, listReq[0].data.count)
+  pageToLoad += 1
+  if (listReq[listReq.length - 1].data.next) {
+    renderLoadMore(pageToLoad)
+  } else {
+    document.querySelector('#count-page').innerHTML = ''
+  }
+}
+
+/*
   if (response) {
-    var newList = response.data.results
-    newList.forEach(elm => {
-      list.push(elm)
+    document.querySelectorAll(`[line-user]`).forEach(elm => {
+      elm.remove()
+    })
+    listPages.push.apply(listPages, response.data.results)
+    var all = getUniqueListBy(listPages, 'id')
+    all.forEach(elm => {
       renderGroup(elm)
     })
-    countTotal = response.data.count
-    countShow = countShow + newList.length
-    renderCountItem(countShow, countTotal)
-    console.log(list.length)
+    renderCountItem(document.querySelectorAll('[line-user]').length,countTotal)
+    console.log(all)
     if (response.data.next) {
       renderLoadMore(response.data.next)
     } else {
       document.querySelector('#count-page').classList.add('hidden--visually')
     }
   }
-}
+*/
 
 function renderCountPageUser(length, page) {
   var html = ''
@@ -372,15 +403,14 @@ window.addGroup = async function addGroup() {
     }
     if (response) {
       var newGroup = response.data
-      list.push(newGroup)
+      listPages.push(newGroup)
       renderGroup(newGroup)
       clearField(0)
       scrollToView(0)
       removeErr()
       countTotal += 1
-      countShow += 1
-      renderCountItem(list.length, countTotal)
-      console.log(list)
+      renderCountItem(document.querySelectorAll('[line-user]').length, countTotal)
+      console.log(listPages)
     }
   } else {
     return 0
@@ -397,14 +427,13 @@ window.delGroup = async function delGroup(id, e) {
   }
   if (response) {
     e.target.parentNode.parentNode.parentNode.parentNode.parentNode.remove()
-    var index = list.findIndex(e => {
+    var index = listPages.findIndex(e => {
       return e.id == `${id}`
     })
-    list.splice(index, 1)
+    listPages.splice(index, 1)
     countTotal -= 1
-    countShow -= 1
-    renderCountItem(list.length, countTotal)
-    console.log(list.length)
+    renderCountItem(document.querySelectorAll('[line-user]').length, countTotal)
+    console.log(listPages)
   }
 }
 
@@ -430,12 +459,12 @@ window.editGroup = async function editGroup(id, e) {
       apiRun(id, false)
     }
     if (response) {
-      var a = list.findIndex(elm => {
+      var a = listPages.findIndex(elm => {
         return elm.id === id
       })
-      list[a] = response.data
+      listPages[a] = response.data
       removeErr(id)
-      console.log(list)
+      console.log(listPages)
     }
   } else {
     return 0
@@ -495,8 +524,9 @@ window.getUsers = async function getUsers(groupID, page = 1) {
     })
     focusNext(addUser)
     addBtn()
-    renderCountItem(listUser.length, countTotal)
-    console.log(list.length)
+    countShow = countTotal
+    renderCountItem(countShow, countTotal)
+    console.log(listUser)
   }
 }
 
@@ -585,7 +615,7 @@ function renderUsers(user) {
 function addTitleUser() {
   var a = document.querySelector('#table')
   var html = `
-       <div class="user-item">
+       <div class="user-item first-user-item">
         <div class="user-line user-tittle">
         ID
         </div>
@@ -692,8 +722,9 @@ window.addUser = async function addUser() {
     if (response) {
       var newUser = response.data
       countTotal += 1
+      countShow += 1
       listUser.push(newUser)
-      renderCountItem(countTotal)
+      renderCountItem(countShow, countTotal)
       renderUsers(newUser)
       clearField()
       console.log(listUser)
@@ -738,7 +769,8 @@ window.delUser = async function delUser(id, e) {
   }
   if (response) {
     countTotal -= 1
-    renderCountItem(countTotal)
+    countShow -= 1
+    renderCountItem(countShow, countTotal)
     e.target.parentElement.parentNode.parentNode.parentNode.parentNode.remove()
     var a = listUser.findIndex(elm => elm.id == id)
     listUser.splice(a, 1)
