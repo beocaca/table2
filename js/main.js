@@ -14,6 +14,9 @@ var countShow = 0
 var arrName = []
 var callBackFocus = null
 var pageToLoad = 1
+
+var allPageGet = null
+
 window.getGroup = async function getGroup(page = 1) {
   var endPoint = `${baseUrl}/dummies/groups/?page=${page}&ungroup=true`
   var response = null
@@ -38,11 +41,12 @@ window.getGroup = async function getGroup(page = 1) {
     renderCountItem(document.querySelectorAll('[line-user]').length, countTotal)
     console.log(listPages)
     if (response.data.next) {
-      pageToLoad += 1
-      renderLoadMore(pageToLoad)
+      renderLoadMoreByEndPoint(response.data.next)
     } else {
       document.querySelector('#count-page').classList.add('hidden--visually')
     }
+    allPageGet = Math.ceil(response.data.count / 20)
+    console.log(allPageGet)
   }
 }
 
@@ -94,21 +98,91 @@ function addBtn() {
   a.insertAdjacentHTML('beforeend', html)
 }
 
+
 function addTitleGroup() {
   var a = document.querySelector('#table')
   var html = `
         <div class="user-item first-user-item user-item-group">
-
         <div class="user-line user-tittle">
           Id
         </div>
         <div class="user-line user-tittle">
-          Group
+          Group <sup data-tittle="group">  </sup>
+          <div onclick="renderSortPages('name',event)" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
       </div>
-  `
+      `
   a.insertAdjacentHTML('afterbegin', html)
 }
+
+function renderSupSort() {
+  document.querySelector('[data-tittle]').innerHTML = 1
+}
+
+window.renderSortPages = async function renderSortPages(name, e) {
+  e.preventDefault()
+  console.log(e.target)
+  e.target.toggleAttribute('is-next-sort')
+  if (e.target.hasAttribute('is-next-sort')) {
+    name = `${name}`
+  } else {
+    name = `-${name}`
+  }
+  var response = null
+  try {
+    response = await axios.get(`https://satlegal.ebitc.com/api/dummies/groups/?ordering=${name}&ungroup=true`)
+  } catch (e) {
+
+  }
+  if (response) {
+    resetUserLine()
+    var newList = response.data.results
+    newList.forEach(elm => {
+      renderGroup(elm)
+    })
+    // renderSupSort()
+  }
+  if (response.data.next) {
+    renderLoadMoreByEndPoint(response.data.next)
+  }
+}
+
+window.renderSortUsers = async function renderSortUsers(name, e) {
+  e.preventDefault()
+  console.log(e.target)
+  e.target.toggleAttribute('is-next-sort')
+  if (e.target.hasAttribute('is-next-sort')) {
+    name = `${name}`
+  } else {
+    name = `-${name}`
+  }
+  var response = null
+  try {
+    response = await axios.get(`https://satlegal.ebitc.com/api/dummies/groups/${getIdGroup()}/users/?ungroup=true&ordering=${name}`)
+  } catch (e) {
+  }
+  if (response) {
+    resetUserLine()
+    var newList = response.data.results
+    newList.forEach(elm => {
+      renderUsers(elm)
+    })
+    // renderSupSort()
+    console.log(response)
+  }
+  if (response.data.next) {
+    renderLoadMoreByEndPoint(response.data.next)
+  }
+}
+
+
+function resetUserLine() {
+  document.querySelectorAll('[line-user]')
+    .forEach(elm => {
+      elm.remove()
+    })
+}
+
 
 //href="http://localhost:1234/user.html?group=${elm.id}"
 
@@ -263,7 +337,7 @@ function checkValue(id = 0) {
 function renderCountItem(show, total) {
   var a = document.querySelector('[count-item]')
   var html = `
-  <div class="show-count">${show} / ${total}
+  <div class="show-count"> / ${total}
   </div>
       `
   a.innerHTML = html
@@ -276,6 +350,35 @@ function renderLoadMore(page) {
   <button class="btn-load" onclick=getNextPage(${page})> Load More </button>
   `
   document.querySelector('#count-page').innerHTML = html
+}
+
+function renderLoadMoreByEndPoint(endPoint) {
+  var html = `
+  <button class="btn-load" onclick=getNextPageByEndPoint('${endPoint}')> Load More </button>
+  `
+  document.querySelector('#count-page').innerHTML = html
+}
+
+window.getNextPageByEndPoint = async function getNextPageByEndPoint(endPoint) {
+  var response = null
+  try {
+    response = await axios.get(endPoint)
+  } catch (e) {
+  }
+  var newListPages = response.data.results
+  newListPages.forEach(elm => {
+    if (document.querySelector(`[line-user="${elm.id}"]`)) {
+      console.error('HAD a :', elm.id)
+    } else {
+      renderGroup(elm)
+    }
+  })
+  if (response.data.next) {
+    renderLoadMoreByEndPoint(response.data.next)
+  } else {
+    document.querySelector('#count-page').innerHTML = ''
+  }
+  renderCountItem(document.querySelectorAll('[line-user]').length, response.data.count)
 }
 
 var i = 0
@@ -299,39 +402,20 @@ window.getNextPage = async function getNextPage(page) {
 
   newListPages.forEach((elm, ind, arr) => {
     var a = document.querySelector(`[line-user = "${elm.id}"]`)
-    console.log(a)
     if (!a) {
       renderGroup(elm)
+    } else {
     }
+    console.log(a)
   })
   renderCountItem(document.querySelectorAll('[line-user]').length, listReq[0].data.count)
   pageToLoad += 1
   if (listReq[listReq.length - 1].data.next) {
-    renderLoadMore(pageToLoad)
+    renderLoadMoreByEndPoint(pageToLoad)
   } else {
     document.querySelector('#count-page').innerHTML = ''
   }
 }
-
-/*
-  if (response) {
-    document.querySelectorAll(`[line-user]`).forEach(elm => {
-      elm.remove()
-    })
-    listPages.push.apply(listPages, response.data.results)
-    var all = getUniqueListBy(listPages, 'id')
-    all.forEach(elm => {
-      renderGroup(elm)
-    })
-    renderCountItem(document.querySelectorAll('[line-user]').length,countTotal)
-    console.log(all)
-    if (response.data.next) {
-      renderLoadMore(response.data.next)
-    } else {
-      document.querySelector('#count-page').classList.add('hidden--visually')
-    }
-  }
-*/
 
 function renderCountPageUser(length, page) {
   var html = ''
@@ -386,12 +470,14 @@ function scrollToView() {
 window.addGroup = async function addGroup() {
   if (checkValue(0).every(x => x)) {
     var response = null
+    var reponsePage1 = null
     var endPoint = `${baseUrl}/dummies/groups/`
     var dataPost = getDataField()
     var dataPostFormData = dataPost.formData
     apiRun(0, true)
     try {
       response = await axios.post(endPoint, dataPostFormData)
+      reponsePage1 = await axios.get('https://satlegal.ebitc.com/api/dummies/groups/?page=1&ungroup=true')
     } catch (e) {
       if (e.response) {
         removeErr()
@@ -404,18 +490,23 @@ window.addGroup = async function addGroup() {
     if (response) {
       var newGroup = response.data
       listPages.push(newGroup)
+
+      console.log(reponsePage1.data.results)
       renderGroup(newGroup)
+
       clearField(0)
+
       scrollToView(0)
+
       removeErr()
       countTotal += 1
       renderCountItem(document.querySelectorAll('[line-user]').length, countTotal)
-      console.log(listPages)
     }
   } else {
     return 0
   }
 }
+//select page hien tai + page sau ca 2
 
 window.delGroup = async function delGroup(id, e) {
   var endPoint = `${baseUrl}/dummies/groups/${id}/`
@@ -504,7 +595,7 @@ window.showDelete = function showDelete(event) {
 var listUser = []
 
 window.getUsers = async function getUsers(groupID, page = 1) {
-  var endPoint = `${baseUrl}/dummies/groups/${groupID}/users/?page=${page}`
+  var endPoint = `${baseUrl}/dummies/groups/${groupID}/users/?page=${page}&ungroup=true `
   var response = null
   reset()
   try {
@@ -539,7 +630,7 @@ function renderUsers(user) {
     user.avatar = avtDefault
   }
   var html = `
-      <div class="user-item">
+      <div line-user="${user.id}" class="user-item">
         <div class="user-line ">
           <div class="control-delete">
             <div class="count-number">
@@ -617,19 +708,25 @@ function addTitleUser() {
   var html = `
        <div class="user-item first-user-item">
         <div class="user-line user-tittle">
-        ID
+          <span>ID</span>
         </div>
         <div class="user-line user-tittle">
-        Avatar
+        <span>Avatar</span>
         </div>
         <div class="user-line user-tittle">
-        FirstName
+        <span>FirstName</span>
+                <sup data-tittle="first_name">  </sup>
+        <div onclick="renderSortUsers('first_name',event)" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
         <div class="user-line user-tittle">
-        LastName
+            <span>        LastName </span>
+                <sup data-tittle="last_name">  </sup>
+        <div onclick="renderSortUsers('last_name',event)" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
         <div class="user-line user-tittle">
-        Email
+        <span>Email</span>
+                <sup data-tittle="email">  </sup>
+        <div onclick="renderSortUsers('email',event)" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
       </div>
   `
@@ -820,6 +917,7 @@ function renderWrapGroup() {
           <div class="status-method"> Doing</div>
         </div>
         <div class="status-right">
+        <div class="count-page" id="count-page"></div>
           <div count-item class="count-item"  >
 
           </div>

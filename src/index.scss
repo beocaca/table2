@@ -118,6 +118,40 @@
   }
 }
 
+.user-item-group {
+}
+.user-tittle {
+  sup {
+    top: -0.3em;
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+    padding-left: 5px;
+  }
+
+  .btn-sort {
+    i {
+      padding: 5px 10px;
+      z-index: 5555;
+      position: relative;
+
+      &[is-next-sort] {
+        transform: rotate(180deg);
+      }
+    }
+
+    &:hover {
+      color: white;
+      background-color: #b3d4fc;
+
+    }
+
+  }
+}
+
+
+
 .table {
   border-radius: 0 0 5px 5px;
   border: solid 1px #e0e0e0;
@@ -131,7 +165,7 @@
     }
   }
 
-  .first-user-item{
+  .first-user-item {
     position: sticky;
     top: 0;
     z-index: 9;
