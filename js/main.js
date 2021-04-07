@@ -880,8 +880,6 @@ window.renderSortGroups = async function renderSortGroups(arrSort) {
   addTitleGroup()
   addBtn()
   var response = null
-  resetUserLine()
-
   try {
     response = await axios.get(`https://satlegal.ebitc.com/api/dummies/groups/?ordering=${arrSort}&ungroup=true`)
   } catch (e) {
@@ -893,6 +891,7 @@ window.renderSortGroups = async function renderSortGroups(arrSort) {
       renderGroup(elm)
     })
     console.log(newList)
+    renderSuperMan()
   }
   if (response.data.next) {
     renderLoadMoreByEndPoint(response.data.next)
@@ -916,17 +915,13 @@ window.pushStateSortGroup = function pushStateSortGroup(name) {
   }
   history.pushState({id: null, name: `${arraySort}`}, `Selected=${arraySort}`, `./?ungroup=true&ordering=${arraySort}`)
   renderSortGroups(arraySort)
-  renderSupSort(arraySort)
-  console.log(arraySort)
 }
 
 window.getOrdering = function getOrdering() {
   var a = location.href;
   var b = new URL(a);
   var c = b.searchParams.get('ordering');
-  var arrOerder = []
-  arrOerder.push(c)
-  return arrOerder
+  return c
 }
 
 function renderSupSort(arr) {
@@ -938,6 +933,30 @@ function renderSupSort(arr) {
       elm.innerText = ''
     } else {
       elm.innerText = index + 1
+    }
+  })
+}
+
+window.renderSuperMan = function renderSuperMan() {
+  var arr = getOrdering().split(',')
+  var newArr = []
+  arr.forEach(elm => {
+    if (elm.indexOf('-') !== -1) {
+      var a = elm.slice(1)
+      newArr.push(a)
+    } else {
+      newArr.push(elm)
+    }
+  })
+  var all = document.querySelectorAll('[data-tittle]')
+  all.forEach(elm => {
+    var i = null
+    var name = elm.getAttribute('data-tittle')
+    if (newArr.includes(name)) {
+      i = newArr.indexOf(name)
+      elm.innerText = i+1
+    } else {
+      elm.innerText = ''
     }
   })
 }
@@ -966,14 +985,14 @@ window.pushStateSortUser = function pushStateSortUser(name) {
   renderSortUsers(arraySort)
 }
 
-window.renderSortUsers = async function renderSortUsers(arrSort) {
+window.renderSortUsers = async function renderSortUsers(order) {
   resetTable()
   addFieldUser()
   addTitleUser()
   addBtn()
   var response = null
   try {
-    response = await axios.get(`https://satlegal.ebitc.com/api/dummies/groups/${getIdGroup()}/users/?ungroup=true&ordering=${arrSort}`)
+    response = await axios.get(`https://satlegal.ebitc.com/api/dummies/groups/${getIdGroup()}/users/?ungroup=true&ordering=${order}`)
   } catch (e) {
   }
   if (response) {
@@ -981,7 +1000,7 @@ window.renderSortUsers = async function renderSortUsers(arrSort) {
     newList.forEach(elm => {
       renderUsers(elm)
     })
-    renderSupSort(arrSort)
+    renderSuperMan()
     console.log(response)
   }
   if (response.data.next) {
@@ -997,20 +1016,21 @@ window.pushStateUserDetail = function pushStateUserDetail(e) {
 }
 
 window.addEventListener('popstate', e => {
-  resetUserLine()
+  // resetUserLine()
+  resetTable()
   console.log(e.state)
   if (e.state && e.state.id !== null) {
-    if (e.state.name) {
+    if (e.state && e.state.name) {
       renderSortUsers(e.state.name)
     } else {
       getUsers(e.state.id, undefined)
     }
   } else {
-    if (e.state.name) {
+    if (e.state && e.state.name) {
       renderSortGroups(e.state.name)
     } else {
+      history.replaceState({id: null}, `Default`, `./`)
       getGroup(1)
-
     }
   }
 })
@@ -1024,9 +1044,9 @@ window.pushStateUser = function pushStateUser(id, e) {
 }
 
 // history.replaceState({id: null}, `Default`, `./`)
-;
+
 // need a ";" before
-(() => {
+;(() => {
   let groupID = getIdGroup();
   if (groupID) {
     if (getOrdering()) {
