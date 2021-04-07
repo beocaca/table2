@@ -120,6 +120,7 @@
 
 .user-item-group {
 }
+
 .user-tittle {
   sup {
     top: -0.3em;
@@ -136,9 +137,7 @@
       z-index: 5555;
       position: relative;
 
-      &[is-next-sort] {
-        transform: rotate(180deg);
-      }
+
     }
 
     &:hover {
@@ -146,10 +145,15 @@
       background-color: #b3d4fc;
 
     }
+    &.btn-sort--rotate{
+      i{
+        transform: rotate(180deg);
+
+      }
+    }
 
   }
 }
-
 
 
 .table {

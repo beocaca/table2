@@ -4,9 +4,12 @@ import axios from "axios";
 
 var baseUrl = 'https://satlegal.ebitc.com/api'
 
-// window.listPages = [];
-var listPages = []
-window.listPages = listPages
+window.listPages = [];
+
+window.listUser = [];
+
+/*var listPages = []
+window.listPages = listPages*/
 var avtDefault = 'https://ehoadonvnpt.vn/public/uploads/system/noavatar.gif'
 var countTotal = 0
 var countItemRemove = 0
@@ -14,7 +17,6 @@ var countShow = 0
 var arrName = []
 var callBackFocus = null
 var pageToLoad = 1
-
 var allPageGet = null
 
 window.getGroup = async function getGroup(page = 1) {
@@ -26,13 +28,13 @@ window.getGroup = async function getGroup(page = 1) {
     console.log(e.response)
   }
   if (response) {
-    reset()
+    resetTable()
     renderWrapGroup()
     countTotal = (response.data.count)
     addTitleGroup()
     addFieldGroup()
-    // listPages = [...response.data.results]
-    listPages.push.apply(listPages, response.data.results)
+    listPages = [...response.data.results]
+    // listPages.push.apply(listPages, response.data.results)
     listPages.forEach(elm => {
       renderGroup(elm)
     })
@@ -98,7 +100,6 @@ function addBtn() {
   a.insertAdjacentHTML('beforeend', html)
 }
 
-
 function addTitleGroup() {
   var a = document.querySelector('#table')
   var html = `
@@ -107,84 +108,28 @@ function addTitleGroup() {
           Id
         </div>
         <div class="user-line user-tittle">
-          Group <sup data-tittle="group">  </sup>
-          <div onclick="renderSortPages('name',event)" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
+          Group <sup data-tittle="name">  </sup>
+          <div onclick="pushStateSortGroup('name')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
       </div>
       `
   a.insertAdjacentHTML('afterbegin', html)
 }
 
-function renderSupSort() {
-  document.querySelector('[data-tittle]').innerHTML = 1
+
+window.getOrder = function getOrder() {
+  var a = location.href
+  var b = new URL(a)
+  var c = b.searchParams.get('ordering')
+  return c
 }
 
-window.renderSortPages = async function renderSortPages(name, e) {
-  e.preventDefault()
-  console.log(e.target)
-  e.target.toggleAttribute('is-next-sort')
-  if (e.target.hasAttribute('is-next-sort')) {
-    name = `${name}`
-  } else {
-    name = `-${name}`
-  }
-  var response = null
-  try {
-    response = await axios.get(`https://satlegal.ebitc.com/api/dummies/groups/?ordering=${name}&ungroup=true`)
-  } catch (e) {
-
-  }
-  if (response) {
-    resetUserLine()
-    var newList = response.data.results
-    newList.forEach(elm => {
-      renderGroup(elm)
-    })
-    // renderSupSort()
-  }
-  if (response.data.next) {
-    renderLoadMoreByEndPoint(response.data.next)
-  }
-}
-
-window.renderSortUsers = async function renderSortUsers(name, e) {
-  e.preventDefault()
-  console.log(e.target)
-  e.target.toggleAttribute('is-next-sort')
-  if (e.target.hasAttribute('is-next-sort')) {
-    name = `${name}`
-  } else {
-    name = `-${name}`
-  }
-  var response = null
-  try {
-    response = await axios.get(`https://satlegal.ebitc.com/api/dummies/groups/${getIdGroup()}/users/?ungroup=true&ordering=${name}`)
-  } catch (e) {
-  }
-  if (response) {
-    resetUserLine()
-    var newList = response.data.results
-    newList.forEach(elm => {
-      renderUsers(elm)
-    })
-    // renderSupSort()
-    console.log(response)
-  }
-  if (response.data.next) {
-    renderLoadMoreByEndPoint(response.data.next)
-  }
-}
-
-
-function resetUserLine() {
+window.resetUserLine = function resetUserLine() {
   document.querySelectorAll('[line-user]')
     .forEach(elm => {
       elm.remove()
     })
 }
-
-
-//href="http://localhost:1234/user.html?group=${elm.id}"
 
 function renderGroup(elm) {
   var a = document.querySelector('.last-user-item')
@@ -343,7 +288,6 @@ function renderCountItem(show, total) {
   a.innerHTML = html
 }
 
-
 function renderLoadMore(page) {
   var endPoint = `${baseUrl}/dummies/groups/?page=${page}`
   var html = `
@@ -432,7 +376,6 @@ function renderCountPageUser(length, page) {
   document.querySelector('#count-page').innerHTML = html
 }
 
-
 function renderCount(length) {
   var all = document.querySelectorAll('.count-number')
   for (var i = 0; i < length; i++) {
@@ -506,7 +449,6 @@ window.addGroup = async function addGroup() {
     return 0
   }
 }
-//select page hien tai + page sau ca 2
 
 window.delGroup = async function delGroup(id, e) {
   var endPoint = `${baseUrl}/dummies/groups/${id}/`
@@ -587,17 +529,15 @@ window.editUser = async function editUser(id) {
 
 }
 
-
 window.showDelete = function showDelete(event) {
   event.target.parentElement.classList.toggle('show')
 }
 
-var listUser = []
 
 window.getUsers = async function getUsers(groupID, page = 1) {
   var endPoint = `${baseUrl}/dummies/groups/${groupID}/users/?page=${page}&ungroup=true `
   var response = null
-  reset()
+  resetTable()
   try {
     response = await axios.get(endPoint)
   } catch (e) {
@@ -606,15 +546,15 @@ window.getUsers = async function getUsers(groupID, page = 1) {
   if (response) {
     renderWrapGroup()
     countTotal = response.data.count
-    renderCountPageUser(Math.ceil(countTotal / 20), page)
+    // renderCountPageUser(Math.ceil(countTotal / 20), page)
     listUser = [...response.data.results]
     addTitleUser()
     addFieldUser()
+    addBtn()
     listUser.forEach(elm => {
       renderUsers(elm)
     })
     focusNext(addUser)
-    addBtn()
     countShow = countTotal
     renderCountItem(countShow, countTotal)
     console.log(listUser)
@@ -716,17 +656,17 @@ function addTitleUser() {
         <div class="user-line user-tittle">
         <span>FirstName</span>
                 <sup data-tittle="first_name">  </sup>
-        <div onclick="renderSortUsers('first_name',event)" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
+        <div  onclick="pushStateSortUser('first_name')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
         <div class="user-line user-tittle">
             <span>        LastName </span>
                 <sup data-tittle="last_name">  </sup>
-        <div onclick="renderSortUsers('last_name',event)" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
+        <div  onclick="pushStateSortUser('last_name')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
         <div class="user-line user-tittle">
         <span>Email</span>
                 <sup data-tittle="email">  </sup>
-        <div onclick="renderSortUsers('email',event)" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
+        <div  onclick="pushStateSortUser('email')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
       </div>
   `
@@ -821,7 +761,7 @@ window.addUser = async function addUser() {
       countTotal += 1
       countShow += 1
       listUser.push(newUser)
-      renderCountItem(countShow, countTotal)
+      // renderCountItem(countShow, countTotal)
       renderUsers(newUser)
       clearField()
       console.log(listUser)
@@ -829,14 +769,6 @@ window.addUser = async function addUser() {
   } else {
     return 0
   }
-}
-//console
-window.initResponseEdit = function initResponseEdit(newItem, id) {
-  var all = document.querySelectorAll(`[data-${id}]`)
-  all.forEach(elm => {
-    var nameKey = elm.getAttribute(`data-${id}`)
-    elm.value = newItem[nameKey]
-  })
 }
 
 function apiRun(id = 0, trueFasle) {
@@ -854,7 +786,6 @@ function apiRun(id = 0, trueFasle) {
     elm.classList.toggle('hidden--visually')
   })
 }
-
 
 window.delUser = async function delUser(id, e) {
   var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/${id}/`
@@ -886,22 +817,21 @@ window.focusNext = function focusNext(callback) {
 }
 
 document.addEventListener('keyup', e => {
-    var all = document.querySelectorAll('[data-0]:not([type="file"])')
-    var name = e.target.getAttribute('data-0')
-    var isEnter = e.keyCode == 13
-    for (var i = 0; i < arrName.length; i++) {
-      if (isEnter && arrName[i] == name && arrName[arrName.length - 1] != name) {
-        document.querySelector(`[data-0="${arrName[i + 1]}"]`).focus()
-      }
-    }
-    if (isEnter && arrName[arrName.length - 1] == name) {
-      all[0].focus()
-      callBackFocus()
+  var all = document.querySelectorAll('[data-0]:not([type="file"])')
+  var name = e.target.getAttribute('data-0')
+  var isEnter = e.keyCode == 13
+  for (var i = 0; i < arrName.length; i++) {
+    if (isEnter && arrName[i] == name && arrName[arrName.length - 1] != name) {
+      document.querySelector(`[data-0="${arrName[i + 1]}"]`).focus()
     }
   }
-)
+  if (isEnter && arrName[arrName.length - 1] == name) {
+    all[0].focus()
+    callBackFocus()
+  }
+})
 
-function reset() {
+window.resetTable = function resetTable() {
   document.querySelector('#table').innerHTML = ''
 }
 
@@ -935,7 +865,6 @@ window.showTable = function showTable(e) {
   x.classList.toggle('status-50')
 }
 
-
 window.getIdGroup = function getIdGroup() {
   var a = location.href
   var b = new URL(a)
@@ -943,32 +872,156 @@ window.getIdGroup = function getIdGroup() {
   return c
 }
 
-window.pushStateUser = function pushStateUser(id, e) {
-  e.preventDefault()
-  history.pushState({id}, `Selected=${id}`, `./?group=${id}`)
-  reset();
-  getUsers(id, undefined);
-  console.log(e)
+var arraySort = []
+
+window.renderSortGroups = async function renderSortGroups(arrSort) {
+  resetTable()
+  addFieldGroup()
+  addTitleGroup()
+  addBtn()
+  var response = null
+  resetUserLine()
+
+  try {
+    response = await axios.get(`https://satlegal.ebitc.com/api/dummies/groups/?ordering=${arrSort}&ungroup=true`)
+  } catch (e) {
+
+  }
+  if (response) {
+    var newList = response.data.results
+    newList.forEach(elm => {
+      renderGroup(elm)
+    })
+    console.log(newList)
+  }
+  if (response.data.next) {
+    renderLoadMoreByEndPoint(response.data.next)
+  }
+}
+
+window.pushStateSortGroup = function pushStateSortGroup(name) {
+  var i = null
+  if (arraySort.includes(name)) {
+    i = arraySort.indexOf(name)
+    arraySort[i] = `-${name}`
+    document.querySelector(`[data-tittle="${name}"]`).setAttribute("data-tittle-sort", `-${name}`)
+  } else if (arraySort.includes(`-${name}`)) {
+    i = arraySort.indexOf(`-${name}`)
+    arraySort.splice(i, 1)
+    document.querySelector(`[data-tittle="${name}"]`).removeAttribute("data-tittle-sort")
+  } else {
+    arraySort.push(name)
+    i = arraySort.indexOf(name)
+    document.querySelector(`[data-tittle="${name}"]`).setAttribute("data-tittle-sort", `${name}`)
+  }
+  history.pushState({id: null, name: `${arraySort}`}, `Selected=${arraySort}`, `./?ungroup=true&ordering=${arraySort}`)
+  renderSortGroups(arraySort)
+  renderSupSort(arraySort)
+  console.log(arraySort)
+}
+
+window.getOrdering = function getOrdering() {
+  var a = location.href;
+  var b = new URL(a);
+  var c = b.searchParams.get('ordering');
+  var arrOerder = []
+  arrOerder.push(c)
+  return arrOerder
+}
+
+function renderSupSort(arr) {
+  var all = document.querySelectorAll('[data-tittle]')
+  all.forEach(elm => {
+    var name = elm.getAttribute('data-tittle-sort')
+    var index = arr.indexOf(name)
+    if (index === -1) {
+      elm.innerText = ''
+    } else {
+      elm.innerText = index + 1
+    }
+  })
+}
+
+window.pushStateSortUser = function pushStateSortUser(name) {
+  var i = null
+  if (arraySort.includes(name)) {
+    i = arraySort.indexOf(name)
+    arraySort[i] = `-${name}`
+    // document.querySelector(`[data-tittle="${name}"]`).innerText = i + 1
+    document.querySelector(`[data-tittle="${name}"]`).setAttribute("data-tittle-sort", `-${name}`)
+  } else if (arraySort.includes(`-${name}`)) {
+    i = arraySort.indexOf(`-${name}`)
+    arraySort.splice(i, 1)
+    // document.querySelector(`[data-tittle="${name}"]`).innerText = ''
+    document.querySelector(`[data-tittle="${name}"]`).removeAttribute("data-tittle-sort")
+  } else {
+    arraySort.push(name)
+    i = arraySort.indexOf(name)
+    // document.querySelector(`[data-tittle="${name}"]`).innerText = i + 1
+    document.querySelector(`[data-tittle="${name}"]`).setAttribute("data-tittle-sort", `${name}`)
+  }
+  history.pushState({id: `${getIdGroup()}`, name: `${arraySort}`},
+    `Selected=${arraySort}`,
+    `./?group=${getIdGroup()}&ungroup=true&ordering=${arraySort}`)
+  renderSortUsers(arraySort)
+}
+
+window.renderSortUsers = async function renderSortUsers(arrSort) {
+  resetTable()
+  addFieldUser()
+  addTitleUser()
+  addBtn()
+  var response = null
+  try {
+    response = await axios.get(`https://satlegal.ebitc.com/api/dummies/groups/${getIdGroup()}/users/?ungroup=true&ordering=${arrSort}`)
+  } catch (e) {
+  }
+  if (response) {
+    var newList = response.data.results
+    newList.forEach(elm => {
+      renderUsers(elm)
+    })
+    renderSupSort(arrSort)
+    console.log(response)
+  }
+  if (response.data.next) {
+    renderLoadMoreByEndPoint(response.data.next)
+  }
 }
 
 window.pushStateUserDetail = function pushStateUserDetail(e) {
   e.preventDefault()
-  history.pushState({id: null}, `Default`, `./`)
-  reset();
+  history.pushState({}, `Default`, `./`)
+  resetTable();
   getGroup(1)
 }
 
-
 window.addEventListener('popstate', e => {
-  reset()
-  console.log(e);
+  resetUserLine()
+  console.log(e.state)
   if (e.state && e.state.id !== null) {
-    getUsers(e.state.id, undefined)
+    if (e.state.name) {
+      renderSortUsers(e.state.name)
+    } else {
+      getUsers(e.state.id, undefined)
+    }
   } else {
-    getGroup(1)
+    if (e.state.name) {
+      renderSortGroups(e.state.name)
+    } else {
+      getGroup(1)
+
+    }
   }
 })
 
+window.pushStateUser = function pushStateUser(id, e) {
+  e.preventDefault()
+  history.pushState({id: `${id}`}, `Selected=${id}`, `./?group=${id}&ungroup=true`)
+  resetTable();
+  getUsers(id, undefined);
+  console.log(e)
+}
 
 // history.replaceState({id: null}, `Default`, `./`)
 ;
@@ -976,9 +1029,17 @@ window.addEventListener('popstate', e => {
 (() => {
   let groupID = getIdGroup();
   if (groupID) {
-    getUsers(groupID, undefined)
+    if (getOrdering()) {
+      renderSortUsers(getOrdering())
+    } else {
+      getUsers(groupID, undefined)
+    }
   } else {
-    getGroup(1)
+    if (getOrdering()) {
+      renderSortGroups(getOrdering())
+    } else {
+      getGroup(1)
+    }
   }
 })();
 
