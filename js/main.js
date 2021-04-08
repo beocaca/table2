@@ -28,18 +28,17 @@ window.getGroup = async function getGroup(page = 1) {
     console.log(e.response)
   }
   if (response) {
-    resetTable()
-    renderWrapGroup()
     countTotal = (response.data.count)
+    renderWrapGroup()
     addTitleGroup()
     addFieldGroup()
+    addBtn()
     listPages = [...response.data.results]
     // listPages.push.apply(listPages, response.data.results)
     listPages.forEach(elm => {
       renderGroup(elm)
     })
     focusNext(addGroup)
-    addBtn()
     renderCountItem(document.querySelectorAll('[line-user]').length, countTotal)
     console.log(listPages)
     if (response.data.next) {
@@ -835,7 +834,7 @@ window.resetTable = function resetTable() {
   document.querySelector('#table').innerHTML = ''
 }
 
-function renderWrapGroup() {
+window.renderWrapGroup = function renderWrapGroup() {
   var a = document.querySelector('#status')
   var html = `
       <div class="status">
@@ -900,28 +899,33 @@ window.renderSortGroups = async function renderSortGroups(arrSort) {
 
 window.pushStateSortGroup = function pushStateSortGroup(name) {
   var i = null
-  if (arraySort.includes(name)) {
-    i = arraySort.indexOf(name)
-    arraySort[i] = `-${name}`
+  var arr = getOrdering()
+  if (arr.includes(name)) {
+    i = arr.indexOf(name)
+    arr[i] = `-${name}`
     document.querySelector(`[data-tittle="${name}"]`).setAttribute("data-tittle-sort", `-${name}`)
-  } else if (arraySort.includes(`-${name}`)) {
-    i = arraySort.indexOf(`-${name}`)
-    arraySort.splice(i, 1)
+  } else if (arr.includes(`-${name}`)) {
+    i = arr.indexOf(`-${name}`)
+    arr.splice(i, 1)
     document.querySelector(`[data-tittle="${name}"]`).removeAttribute("data-tittle-sort")
   } else {
-    arraySort.push(name)
-    i = arraySort.indexOf(name)
+    arr.push(name)
+    i = arr.indexOf(name)
     document.querySelector(`[data-tittle="${name}"]`).setAttribute("data-tittle-sort", `${name}`)
   }
-  history.pushState({id: null, name: `${arraySort}`}, `Selected=${arraySort}`, `./?ungroup=true&ordering=${arraySort}`)
-  renderSortGroups(arraySort)
+  history.pushState({id: null, name: `${arr}`}, `Selected=${arr}`, `./?ungroup=true&ordering=${arr}`)
+  renderSortGroups(arr)
 }
 
 window.getOrdering = function getOrdering() {
   var a = location.href;
   var b = new URL(a);
   var c = b.searchParams.get('ordering');
-  return c
+  if (c === null || c === '') {
+    return []
+  } else {
+    return c.split(',')
+  }
 }
 
 function renderSupSort(arr) {
@@ -938,7 +942,7 @@ function renderSupSort(arr) {
 }
 
 window.renderSuperMan = function renderSuperMan() {
-  var arr = getOrdering().split(',')
+  var arr = getOrdering()
   var newArr = []
   arr.forEach(elm => {
     if (elm.indexOf('-') !== -1) {
@@ -954,7 +958,7 @@ window.renderSuperMan = function renderSuperMan() {
     var name = elm.getAttribute('data-tittle')
     if (newArr.includes(name)) {
       i = newArr.indexOf(name)
-      elm.innerText = i+1
+      elm.innerText = i + 1
     } else {
       elm.innerText = ''
     }
@@ -963,26 +967,32 @@ window.renderSuperMan = function renderSuperMan() {
 
 window.pushStateSortUser = function pushStateSortUser(name) {
   var i = null
-  if (arraySort.includes(name)) {
-    i = arraySort.indexOf(name)
-    arraySort[i] = `-${name}`
+  // arraySort
+  var arr = getOrdering()
+  if (arr.includes(name)) {
+    i = arr.indexOf(name)
+    arr[i] = `-${name}`
     // document.querySelector(`[data-tittle="${name}"]`).innerText = i + 1
     document.querySelector(`[data-tittle="${name}"]`).setAttribute("data-tittle-sort", `-${name}`)
-  } else if (arraySort.includes(`-${name}`)) {
-    i = arraySort.indexOf(`-${name}`)
-    arraySort.splice(i, 1)
+  } else if (arr.includes(`-${name}`)) {
+    i = arr.indexOf(`-${name}`)
+    arr.splice(i, 1)
     // document.querySelector(`[data-tittle="${name}"]`).innerText = ''
     document.querySelector(`[data-tittle="${name}"]`).removeAttribute("data-tittle-sort")
   } else {
-    arraySort.push(name)
-    i = arraySort.indexOf(name)
+    arr.push(name)
+    i = arr.indexOf(name)
     // document.querySelector(`[data-tittle="${name}"]`).innerText = i + 1
     document.querySelector(`[data-tittle="${name}"]`).setAttribute("data-tittle-sort", `${name}`)
   }
-  history.pushState({id: `${getIdGroup()}`, name: `${arraySort}`},
-    `Selected=${arraySort}`,
-    `./?group=${getIdGroup()}&ungroup=true&ordering=${arraySort}`)
-  renderSortUsers(arraySort)
+  history.pushState({id: `${getIdGroup()}`, name: `${arr}`},
+    `Selected=${arr}`,
+    `./?group=${getIdGroup()}&ungroup=true&ordering=${arr}`)
+  renderSortUsers(arr)
+}
+
+function rotateArrow() {
+
 }
 
 window.renderSortUsers = async function renderSortUsers(order) {
@@ -1010,15 +1020,13 @@ window.renderSortUsers = async function renderSortUsers(order) {
 
 window.pushStateUserDetail = function pushStateUserDetail(e) {
   e.preventDefault()
-  history.pushState({}, `Default`, `./`)
-  resetTable();
+  history.replaceState({id: null}, `Default`, `./?ungroup=true&ordering=`)
   getGroup(1)
 }
 
 window.addEventListener('popstate', e => {
-  // resetUserLine()
   resetTable()
-  console.log(e.state)
+  console.log(e.currentTarget.location)
   if (e.state && e.state.id !== null) {
     if (e.state && e.state.name) {
       renderSortUsers(e.state.name)
@@ -1029,7 +1037,7 @@ window.addEventListener('popstate', e => {
     if (e.state && e.state.name) {
       renderSortGroups(e.state.name)
     } else {
-      history.replaceState({id: null}, `Default`, `./`)
+      history.replaceState({id: null}, `Default`, `./?ungroup=true&ordering=`)
       getGroup(1)
     }
   }
@@ -1037,10 +1045,9 @@ window.addEventListener('popstate', e => {
 
 window.pushStateUser = function pushStateUser(id, e) {
   e.preventDefault()
-  history.pushState({id: `${id}`}, `Selected=${id}`, `./?group=${id}&ungroup=true`)
+  history.pushState({id: `${id}`}, `Selected=${id}`, `./?group=${id}&ungroup=true&ordering=`)
   resetTable();
   getUsers(id, undefined);
-  console.log(e)
 }
 
 // history.replaceState({id: null}, `Default`, `./`)
@@ -1049,19 +1056,23 @@ window.pushStateUser = function pushStateUser(id, e) {
 ;(() => {
   let groupID = getIdGroup();
   if (groupID) {
-    if (getOrdering()) {
-      renderSortUsers(getOrdering())
+    if (getOrdering().length > 0) {
+      renderSortUsers(getOrdering().toString())
     } else {
       getUsers(groupID, undefined)
     }
   } else {
-    if (getOrdering()) {
-      renderSortGroups(getOrdering())
+    if (getOrdering().length > 0) {
+      renderSortGroups(getOrdering().toString())
+      console.log(111111111111)
     } else {
+      history.replaceState({id: null}, `Default`, `./?ungroup=true&ordering=`)
       getGroup(1)
     }
   }
 })();
+
+
 
 
 
