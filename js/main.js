@@ -655,17 +655,17 @@ function addTitleUser() {
         <div class="user-line user-tittle">
         <span>FirstName</span>
                 <sup data-tittle="first_name">  </sup>
-        <div  onclick="pushStateSortUser('first_name')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
+        <div btn-sort="first_name"  onclick="pushStateSortUser('first_name')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
         <div class="user-line user-tittle">
             <span>        LastName </span>
                 <sup data-tittle="last_name">  </sup>
-        <div  onclick="pushStateSortUser('last_name')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
+        <div btn-sort="last_name" onclick="pushStateSortUser('last_name')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
         <div class="user-line user-tittle">
         <span>Email</span>
                 <sup data-tittle="email">  </sup>
-        <div  onclick="pushStateSortUser('email')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
+        <div btn-sort="email" onclick="pushStateSortUser('email')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
       </div>
   `
@@ -991,8 +991,19 @@ window.pushStateSortUser = function pushStateSortUser(name) {
   renderSortUsers(arr)
 }
 
-function rotateArrow() {
-
+window.renderArrowSort = function renderArrowSort() {
+  var arr = getOrdering()
+  var all = document.querySelectorAll('[btn-sort]')
+  all.forEach(elm => {
+    var name = elm.getAttribute('btn-sort')
+    if (arr.includes(name)) {
+      elm.classList.add('sort-down')
+    } else if (arr.includes(`-${name}`)) {
+      elm.classList.add('sort-up')
+    } else {
+      elm.classList.remove('sort-down', 'sort-up')
+    }
+  })
 }
 
 window.renderSortUsers = async function renderSortUsers(order) {
@@ -1011,6 +1022,7 @@ window.renderSortUsers = async function renderSortUsers(order) {
       renderUsers(elm)
     })
     renderSuperMan()
+    renderArrowSort()
     console.log(response)
   }
   if (response.data.next) {

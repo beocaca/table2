@@ -122,6 +122,12 @@
 }
 
 .user-tittle {
+  &:hover {
+    .btn-sort {
+      opacity: 1;
+    }
+  }
+
   sup {
     top: -0.3em;
     font-size: 75%;
@@ -132,6 +138,8 @@
   }
 
   .btn-sort {
+    opacity: 0;
+
     i {
       padding: 5px 10px;
       z-index: 5555;
@@ -143,15 +151,21 @@
     &:hover {
       color: white;
       background-color: #b3d4fc;
-
     }
-    &.btn-sort--rotate{
-      i{
+
+    &.sort-down {
+      i {
         transform: rotate(180deg);
-
       }
+
+      opacity: 1;
     }
 
+    &.sort-up {
+      opacity: 1;
+
+
+    }
   }
 }
 
