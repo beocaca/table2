@@ -39,7 +39,7 @@ window.getGroup = async function getGroup(page = 1) {
       renderGroup(elm)
     })
     focusNext(addGroup)
-    renderCountItem(document.querySelectorAll('[line-user]').length, countTotal)
+    renderCountItem(countTotal)
     console.log(listPages)
     if (response.data.next) {
       renderLoadMoreByEndPoint(response.data.next)
@@ -108,7 +108,7 @@ function addTitleGroup() {
         </div>
         <div class="user-line user-tittle">
           Group <sup data-tittle="name">  </sup>
-          <div onclick="pushStateSortGroup('name')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
+          <div btn-sort="name" onclick="pushStateSortGroup('name')" class="btn-sort"> <i class="fas fa-arrow-down"></i> </div>
         </div>
       </div>
       `
@@ -278,7 +278,7 @@ function checkValue(id = 0) {
   return checkArr
 }
 
-function renderCountItem(show, total) {
+function renderCountItem(total) {
   var a = document.querySelector('[count-item]')
   var html = `
   <div class="show-count"> / ${total}
@@ -321,7 +321,7 @@ window.getNextPageByEndPoint = async function getNextPageByEndPoint(endPoint) {
   } else {
     document.querySelector('#count-page').innerHTML = ''
   }
-  renderCountItem(document.querySelectorAll('[line-user]').length, response.data.count)
+  renderCountItem(response.data.count)
 }
 
 var i = 0
@@ -351,7 +351,7 @@ window.getNextPage = async function getNextPage(page) {
     }
     console.log(a)
   })
-  renderCountItem(document.querySelectorAll('[line-user]').length, listReq[0].data.count)
+  renderCountItem(listReq[0].data.count)
   pageToLoad += 1
   if (listReq[listReq.length - 1].data.next) {
     renderLoadMoreByEndPoint(pageToLoad)
@@ -442,7 +442,7 @@ window.addGroup = async function addGroup() {
 
       removeErr()
       countTotal += 1
-      renderCountItem(document.querySelectorAll('[line-user]').length, countTotal)
+      renderCountItem(countTotal)
     }
   } else {
     return 0
@@ -464,7 +464,8 @@ window.delGroup = async function delGroup(id, e) {
     })
     listPages.splice(index, 1)
     countTotal -= 1
-    renderCountItem(document.querySelectorAll('[line-user]').length, countTotal)
+    // document.querySelectorAll('[line-user]').length,
+    renderCountItem(countTotal)
     console.log(listPages)
   }
 }
@@ -554,8 +555,7 @@ window.getUsers = async function getUsers(groupID, page = 1) {
       renderUsers(elm)
     })
     focusNext(addUser)
-    countShow = countTotal
-    renderCountItem(countShow, countTotal)
+    renderCountItem(countTotal)
     console.log(listUser)
   }
 }
@@ -758,9 +758,8 @@ window.addUser = async function addUser() {
     if (response) {
       var newUser = response.data
       countTotal += 1
-      countShow += 1
       listUser.push(newUser)
-      // renderCountItem(countShow, countTotal)
+      renderCountItem(countTotal)
       renderUsers(newUser)
       clearField()
       console.log(listUser)
@@ -796,8 +795,7 @@ window.delUser = async function delUser(id, e) {
   }
   if (response) {
     countTotal -= 1
-    countShow -= 1
-    renderCountItem(countShow, countTotal)
+    renderCountItem(countTotal)
     e.target.parentElement.parentNode.parentNode.parentNode.parentNode.remove()
     var a = listUser.findIndex(elm => elm.id == id)
     listUser.splice(a, 1)
@@ -875,6 +873,7 @@ var arraySort = []
 
 window.renderSortGroups = async function renderSortGroups(arrSort) {
   resetTable()
+  renderWrapGroup()
   addFieldGroup()
   addTitleGroup()
   addBtn()
@@ -891,6 +890,9 @@ window.renderSortGroups = async function renderSortGroups(arrSort) {
     })
     console.log(newList)
     renderSuperMan()
+    renderArrowSort()
+    focusNext(addGroup)
+    renderCountItem(response.data.count)
   }
   if (response.data.next) {
     renderLoadMoreByEndPoint(response.data.next)
@@ -1008,6 +1010,7 @@ window.renderArrowSort = function renderArrowSort() {
 
 window.renderSortUsers = async function renderSortUsers(order) {
   resetTable()
+  renderWrapGroup()
   addFieldUser()
   addTitleUser()
   addBtn()
@@ -1023,6 +1026,7 @@ window.renderSortUsers = async function renderSortUsers(order) {
     })
     renderSuperMan()
     renderArrowSort()
+    renderCountItem(response.data.count)
     console.log(response)
   }
   if (response.data.next) {
