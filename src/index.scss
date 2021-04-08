@@ -118,9 +118,6 @@
   }
 }
 
-.user-item-group {
-}
-
 .user-tittle {
   &:hover {
     .btn-sort {
@@ -335,6 +332,21 @@
   .count-page {
     padding: 0 20px;
 
+  }
+}
+
+.btn-load {
+  padding: 5px;
+  border: solid 1px;
+  display: inline-block;
+  color: blue;
+  cursor: pointer;
+  background-color: transparent;
+  border-radius: 5px;
+  border: solid 1px #b3d4fc;
+
+  &:hover {
+    transform: scale(0.98);
   }
 }
 
