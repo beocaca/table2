@@ -416,9 +416,19 @@ function renderError(id = 0, errors) {
   var errKeys = Object.keys(errors)
   errKeys.forEach(k => {
     var arrMess = errors[k]
-    var mess = arrMess.join()
+    if (k === 'detail') {
+      document.querySelector(`[err-${id}]`)
+        .textContent = `${arrMess} Item deleted !`
+      document.querySelector(`[valid-${id}]`)
+        .classList.add('valid-tip-show')
+      document.querySelector(`[valid-${id}]`)
+        .classList.remove('hidden--visually')
+      document.querySelector(`[line-user = "${id}"]`)
+        .classList.add('item-deleted')
+      return 0
+    }
     document.querySelector(`[err-${id} = "${k}"]`)
-      .textContent = mess
+      .textContent = arrMess
     document.querySelector(`[valid-${id} = "${k}"]`)
       .classList.remove('hidden--visually')
     document.querySelector(`[data-${id} = "${k}"]`)
@@ -442,17 +452,14 @@ function scrollToView() {
 window.addGroup = async function addGroup() {
   if (checkValue(0).every(x => x)) {
     var response = null
-    var reponsePage1 = null
     var endPoint = `${baseUrl}/dummies/groups/`
     var dataPost = getDataField()
     var dataPostFormData = dataPost.formData
     apiRun(0, true)
     try {
       response = await axios.post(endPoint, dataPostFormData)
-      reponsePage1 = await axios.get('https://satlegal.ebitc.com/api/dummies/groups/?page=1&ungroup=true')
     } catch (e) {
       if (e.response) {
-        removeErr()
         var errors = e.response.data
         renderError(0, errors)
       }
@@ -462,8 +469,7 @@ window.addGroup = async function addGroup() {
     if (response) {
       var newGroup = response.data
       listPages.push(newGroup)
-
-      console.log(reponsePage1.data.results)
+      console.log(response)
       renderGroup(newGroup)
 
       clearField(0)
@@ -483,11 +489,15 @@ window.delGroup = async function delGroup(id, e) {
   var endPoint = `${baseUrl}/dummies/groups/${id}/`
   var response = null
   try {
-    response = axios.delete(endPoint)
+    response = await axios.delete(endPoint)
   } catch (e) {
-    console.log(e)
+    console.log(e.response.data)
+    var errors = e.response.data
+    renderError(id, errors)
   }
   if (response) {
+    console.log(response)
+    removeErr(id)
     e.target.parentNode.parentNode.parentNode.parentNode.parentNode.remove()
     var index = listPages.findIndex(e => {
       return e.id == `${id}`
@@ -504,7 +514,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-window.editGroup = async function editGroup(id, e) {
+window.editGroup = async function editGroup(id, event) {
   if (checkValue(id).every(x => x)) {
     var endPoint = `${baseUrl}/dummies/groups/${id}/`
     var dataPost = getDataField(id)
@@ -515,6 +525,7 @@ window.editGroup = async function editGroup(id, e) {
       response = await axios.put(endPoint, dataPostFormData)
     } catch (e) {
       if (e.response) {
+        console.log(e.response.data)
         var errors = e.response.data
         renderError(id, errors)
       }
@@ -811,7 +822,6 @@ function apiRun(id = 0, trueFasle) {
   var allInput = document.querySelectorAll(`[data-${id}]:not([type="file"])`)
   allInput.forEach(elm => {
     elm[`${a}`]('disabled', '')
-    allInput[0].focus()
   })
   var allLoadImg = document.querySelectorAll(`[loading-${id}]`)
   allLoadImg.forEach(elm => {
@@ -822,10 +832,12 @@ function apiRun(id = 0, trueFasle) {
 window.delUser = async function delUser(id, e) {
   var endPoint = `${baseUrl}/dummies/groups/${getIdGroup()}/users/${id}/`
   var response = null
+  removeErr(id)
   try {
     response = await axios.delete(endPoint)
   } catch (e) {
     console.log(e)
+    renderError(id, e.response.data)
   }
   if (response) {
     countTotal -= 1
