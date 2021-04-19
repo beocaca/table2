@@ -210,6 +210,7 @@ function getDataField(id = 0) {
       formData.append(fieldName, fieldValue)
     }
   })
+  console.log(jsonData)
   return {
     jsonData,
     formData
@@ -479,6 +480,7 @@ window.addGroup = async function addGroup() {
       removeErr()
       countTotal += 1
       renderCountItem(countTotal)
+      focusFirst()
     }
   } else {
     return 0
@@ -791,7 +793,7 @@ window.addUser = async function addUser() {
     var response = null
     removeErr(0)
     try {
-      response = await axios.post(endPoint, dataPostFormData)
+      response = await axios.post(endPoint, (dataPostFormData))
     } catch (e) {
       if (e.response) {
         var errors = e.response.data
@@ -807,6 +809,7 @@ window.addUser = async function addUser() {
       renderCountItem(countTotal)
       renderUsers(newUser)
       clearField()
+      focusFirst()
       console.log(listUser)
     }
   } else {
@@ -814,9 +817,9 @@ window.addUser = async function addUser() {
   }
 }
 
-function apiRun(id = 0, trueFasle) {
+function apiRun(id = 0, boonLean) {
   var a = 'setAttribute'
-  if (!trueFasle) {
+  if (!boonLean) {
     a = 'removeAttribute'
   }
   var allInput = document.querySelectorAll(`[data-${id}]:not([type="file"])`)
@@ -859,6 +862,10 @@ window.focusNext = function focusNext(callback) {
   callBackFocus = callback
 }
 
+window.focusFirst = function focusFirst() {
+  var all = document.querySelectorAll('[data-0]:not([type="file"])')
+  all[0].focus()
+}
 document.addEventListener('keyup', e => {
   var all = document.querySelectorAll('[data-0]:not([type="file"])')
   var name = e.target.getAttribute('data-0')
@@ -869,7 +876,6 @@ document.addEventListener('keyup', e => {
     }
   }
   if (isEnter && arrName[arrName.length - 1] == name) {
-    all[0].focus()
     callBackFocus()
   }
 })
@@ -913,11 +919,6 @@ window.getIdGroup = function getIdGroup() {
   var b = new URL(a)
   var c = b.searchParams.get('group')
   return c
-}
-
-function countLineUser() {
-  var a = document.querySelectorAll('[line-user]')
-  return a.length
 }
 
 window.renderSortGroups = async function renderSortGroups(arrSort) {
@@ -1067,7 +1068,6 @@ window.renderSortUsers = async function renderSortUsers(order) {
     })
     renderSuperMan()
     renderArrowSort()
-
     countTotal = (response.data.count)
     renderCountItem(countTotal)
     console.log(response)
@@ -1111,7 +1111,6 @@ window.pushStateUser = function pushStateUser(id, e) {
 
 // history.replaceState({id: null}, `Default`, `./`)
 
-// need a ";" before
 ;(() => {
   let groupID = getIdGroup();
   if (groupID) {
